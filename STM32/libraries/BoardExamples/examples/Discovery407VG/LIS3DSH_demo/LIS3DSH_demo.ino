@@ -109,9 +109,9 @@ void initSensor() {
   //SPI.beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE0));
  
   digitalWrite(PE3, LOW);
-  uint8_t ret =SPI.transfer(CTRL_REG4); 
   delay(1);
-  ret =SPI.transfer(0x77);  
+  uint8_t ret =SPI.transfer(CTRL_REG4);   
+  ret =SPI.transfer(0x47);  
 
   //ret =SPI.transfer(CTRL_REG5); 
   //delay(10);
@@ -145,4 +145,3 @@ void loop() {
   printXYZ();
   delay(20);
 }
-
