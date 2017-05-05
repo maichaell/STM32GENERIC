@@ -25,8 +25,8 @@ for line in boards:
     key = key.strip()
     value = value.strip()
     
-    if key.startswith('menu.nucleo_board.'):
-        key = key.replace('menu.nucleo_board.', '')
+    if key.startswith('menu.subboard.'):
+        key = key.replace('menu.subboard.', '')
         if '.' not in key:
             continue
 
@@ -46,7 +46,9 @@ for line in boards:
             variant_uploads.setdefault(board + '_' + upload, variants[board].copy())[k] = value
     else:
         variants.setdefault(board, OrderedDict())[key] = value
-    
+
+del variant_uploads['BLACK_F407XX_serialMethod']
+del variant_uploads['BLACK_F407XX_STLinkMethod']
 
 for variant in variants.keys():
     upload_exists = False
@@ -74,6 +76,8 @@ for (variant, replaces) in variant_uploads.iteritems():
     replaces['build.system.path'] = root + '/system'
     replaces['build.core.path'] = root + '/cores/arduino'
     replaces['build.variant.path'] = '$(PATH_VARIANT)'
+    
+    replaces['build.extra_flags_usb'] = '-DMENU_USB_SERIAL'
 
     with open('makefiles/' + variant, 'w') as file:
         
