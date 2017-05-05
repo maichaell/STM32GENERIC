@@ -1,0 +1,7 @@
+{
+    "description":"Arduino Wiring-based Framework (STM32GENERIC)",
+    "name":"framework-arduinoSTM32GENERIC",
+    "system":"all",
+    "url":"https://github.com/danieleff/STM32GENERIC",
+    "version":"2.0.0"
+}
