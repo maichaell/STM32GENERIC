@@ -38,6 +38,8 @@
 extern "C" {
 #endif
 
+extern void setHeap(unsigned char *start, unsigned char *end);
+
 extern caddr_t _sbrk( int incr ) ;
 
 extern int link( char *cOld, char *cNew ) ;

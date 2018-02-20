@@ -1,8 +1,30 @@
+/*
+  Copyright (c) 2017 Daniel Fekete
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
+
 #include "stm32_gpio.h"
 
 #include "variant.h"
 
-void stm32GpioClock(GPIO_TypeDef *port) {
+void stm32GpioClockEnable(GPIO_TypeDef *port) {
     
     #ifdef GPIOA
     if (port == GPIOA) __HAL_RCC_GPIOA_CLK_ENABLE();
@@ -46,7 +68,7 @@ void pinMode(uint8_t pin, uint8_t mode) {
         (*stm32_pwm_disable_callback)(port_pin.port, port_pin.pin_mask);
     }
 
-    stm32GpioClock(port_pin.port);
+    stm32GpioClockEnable(port_pin.port);
     
     GPIO_InitTypeDef init;
     
@@ -81,4 +103,49 @@ void pinMode(uint8_t pin, uint8_t mode) {
     
     HAL_GPIO_Init(port_pin.port, &init);
     
+}
+
+void pinModeLL(GPIO_TypeDef *port, uint32_t ll_pin, uint8_t mode) {
+
+    stm32GpioClockEnable(port);
+
+    int pinMode;
+    int outputType;
+    int pull;
+
+    switch ( mode ) {
+      case INPUT:
+          pinMode = LL_GPIO_MODE_INPUT;
+          outputType = LL_GPIO_OUTPUT_OPENDRAIN;
+          pull = LL_GPIO_PULL_DOWN;
+        break;
+
+      case INPUT_PULLUP:
+          pinMode = LL_GPIO_MODE_INPUT;
+          outputType = LL_GPIO_OUTPUT_PUSHPULL;
+          pull = LL_GPIO_PULL_UP;
+        break;
+
+      case INPUT_PULLDOWN:
+          pinMode = LL_GPIO_MODE_INPUT;
+          outputType = LL_GPIO_OUTPUT_PUSHPULL;
+          pull = LL_GPIO_PULL_DOWN;
+        break;
+
+      case OUTPUT:
+          pinMode = LL_GPIO_MODE_OUTPUT;
+          outputType = LL_GPIO_OUTPUT_PUSHPULL;
+          pull = LL_GPIO_PULL_DOWN;
+        break;
+
+      default:
+        return;
+        break;
+    }
+
+    LL_GPIO_SetPinMode(port, ll_pin, pinMode);
+    LL_GPIO_SetPinPull(port, ll_pin, pull);
+    LL_GPIO_SetPinOutputType(port, ll_pin, outputType);
+    LL_GPIO_SetPinSpeed(port, ll_pin, LL_GPIO_SPEED_FREQ_HIGH);
+
 }

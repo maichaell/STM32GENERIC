@@ -31,8 +31,8 @@
 #include "usb_device.h"
 #include "usbd_core.h"
 #include "usbd_desc.h"
-#include "usbd_cdc.h"
-#include "usbd_cdc_if.h"
+#include "cdc/usbd_cdc.h"
+#include "cdc/usbd_cdc_if.h"
 
 #include "Stream.h"
 #include <Arduino.h>
@@ -89,8 +89,9 @@ class SerialUSBClass : public Stream{
       volatile uint16_t iTail;
     };
     ring_buffer rx_buffer;
-    //ring_buffer tx_buffer;
-    GPIO_InitTypeDef GPIO_InitStruct;
+
+    ring_buffer tx_buffer;
+    volatile int transmitting = 0;
 };
 
 extern SerialUSBClass SerialUSB;

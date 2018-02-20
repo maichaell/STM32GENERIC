@@ -27,11 +27,13 @@ compiler.ar.cmd=arm-none-eabi-ar
 compiler.c.elf.cmd=arm-none-eabi-gcc
 compiler.objcopy.cmd=arm-none-eabi-objcopy
 
-compiler.S.flags=-mcpu={build.mcu} -DF_CPU={build.f_cpu} -mthumb -c -g -x assembler-with-cpp
+compiler.extra_flags=-mcpu={build.mcu} -DF_CPU={build.f_cpu} -mthumb -DSTM32GENERIC -DRAM_LENGTH={upload.maximum_data_size} -DFLASH_LENGTH={upload.maximum_size}
 
-compiler.c.flags=-mcpu={build.mcu} -DF_CPU={build.f_cpu} -mthumb -c -g -MMD -Os {compiler.warning_flags} -std=gnu11 -ffunction-sections -fdata-sections -nostdlib --param max-inline-insns-single=500 -Dprintf=iprintf -MMD
+compiler.S.flags={compiler.extra_flags} -c -g -x assembler-with-cpp
 
-compiler.cpp.flags=-mcpu={build.mcu} -DF_CPU={build.f_cpu} -mthumb -c -g -Os {compiler.warning_flags} -std=gnu++11 -ffunction-sections -fdata-sections -nostdlib -fno-threadsafe-statics --param max-inline-insns-single=500 -fno-rtti -fno-exceptions -Dprintf=iprintf -MMD
+compiler.c.flags={compiler.extra_flags} -c -g -MMD -Os {compiler.warning_flags} -std=gnu11 -ffunction-sections -fdata-sections -nostdlib --param max-inline-insns-single=500 -Dprintf=iprintf -MMD
+
+compiler.cpp.flags={compiler.extra_flags} -c -g -Os {compiler.warning_flags} -std=gnu++11 -ffunction-sections -fdata-sections -nostdlib -fno-threadsafe-statics --param max-inline-insns-single=500 -fno-rtti -fno-exceptions -Dprintf=iprintf -MMD
 
 compiler.ar.flags=rcs
 
@@ -51,7 +53,8 @@ build.extra_flags=
 build.extra_flags_usb=
 build.extra_flags_serial=
 build.extra_flags_serial_auto=
-build.extra_flags_menu={build.extra_flags_usb} {build.extra_flags_serial} {build.extra_flags_serial_auto}
+build.extra_flags_jtag=
+build.extra_flags_menu={build.extra_flags_usb} {build.extra_flags_serial} {build.extra_flags_serial_auto} {build.extra_flags_jtag}
 build.ldscript=ldscript.ld
 
 # These can be overridden in platform.local.txt
@@ -98,7 +101,7 @@ recipe.output.save_file={build.project_name}.{build.variant}.bin
 
 ## Compute size
 recipe.size.pattern="{compiler.path}{compiler.size.cmd}" -A "{build.path}/{build.project_name}.elf"
-recipe.size.regex=^(?:\.text|\.data|\.rodata)\s+([0-9]+).*
+recipe.size.regex=^(?:\.text|\.data|\.rodata|\.isr_vector)\s+([0-9]+).*
 recipe.size.regex.data=^(?:\.data|\.bss|\._user_heap_stack)\s+([0-9]+).*
 recipe.size.regex.eeprom=^(?:\.eeprom)\s+([0-9]+).*
 
@@ -136,7 +139,7 @@ tools.stlink_upload.upload.pattern="{path}/{cmd}" {serial.port.file} {upload.alt
 tools.maple_upload.cmd=maple_upload
 tools.maple_upload.cmd.windows=maple_upload.bat
 tools.maple_upload.path={runtime.hardware.path}/tools/win
-tools.maple_upload.path.macosx={runtime.hardware.path.path}/tools/macosx
+tools.maple_upload.path.macosx={runtime.hardware.path}/tools/macosx
 tools.maple_upload.path.linux={runtime.hardware.path}/tools/linux
 tools.maple_upload.path.linux64={runtime.hardware.path}/tools/linux64
 tools.maple_upload.upload.params.verbose=-d
