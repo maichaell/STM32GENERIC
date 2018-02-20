@@ -24,10 +24,11 @@
  *
  ****************************************************************************/
 
-#ifdef MENU_USB_SERIAL
-
-#include <SerialUSB.h>
+#include "SerialUSB.h"
+#include "STM32System.h"
 #include "variant.h"
+
+#include "USBDevice.h"
 
 // Constructors ////////////////////////////////////////////////////////////////
 SerialUSBClass::SerialUSBClass(){
@@ -36,31 +37,14 @@ SerialUSBClass::SerialUSBClass(){
   //tx_buffer.iHead = tx_buffer.iTail = 0;
 }
 
-void SerialUSBClass::init(void){
-/* Re-enumerate the USB */
-  volatile unsigned int i;
-
-#ifdef USB_DISC_PIN
-  pinMode(USB_DISC_PIN, OUTPUT);
-  digitalWrite(USB_DISC_PIN, HIGH);
-	for(i=0;i<512;i++);
-  digitalWrite(USB_DISC_PIN, LOW);
-#else
-  //pinMode(USBDP_PIN, OUTPUT);
-  //digitalWrite(USBDP_PIN, LOW);
-	//for(i=0;i<512;i++);
-  //digitalWrite(USBDP_PIN, HIGH);
-
-  
-  pinMode(PA12, OUTPUT);
-  digitalWrite(PA12, LOW);
-  //HAL_Delay(1000);
-  for(i=0;i<512;i++){};
-  digitalWrite(PA12, HIGH);
-  //HAL_Delay(1000);
-  for(i=0;i<512;i++){};
-#endif
-  MX_USB_DEVICE_Init();
+void SerialUSBClass::init(void) {
+    if (stdoutStream == NULL) {
+        #if defined(MENU_SERIAL) && MENU_SERIAL == SerialUSB
+            stdoutStream = this;
+        #elif defined(MENU_SERIAL_AUTO) && MENU_SERIAL_AUTO == SerialUSB
+            stdoutStream = this;
+        #endif
+    }
 }
 
 
@@ -85,6 +69,7 @@ void SerialUSBClass::end(void){
 int SerialUSBClass::availableForWrite(void){
   //return (CDC_SERIAL_BUFFER_SIZE - available());
   //return (uint32_t)(CDC_SERIAL_BUFFER_SIZE + tx_buffer.iHead - tx_buffer.iTail) % CDC_SERIAL_BUFFER_SIZE;
+  return 0;
 }
 
 
@@ -118,39 +103,54 @@ void SerialUSBClass::flush(void){
 
 size_t SerialUSBClass::write(const uint8_t *buffer, size_t size){
    unsigned long timeout=millis()+5;
-  if(hUsbDeviceFS.dev_state == USBD_STATE_CONFIGURED)
-  {
-    while(millis()<timeout)
-   {
-      if(CDC_Transmit_FS((uint8_t*)buffer, size) == USBD_OK)
-     {
-         return size;
-      }
+
+    if(hUsbDeviceFS.dev_state != USBD_STATE_CONFIGURED) {
+        return 0;
     }
-  }
-  
+
+   for(size_t i=0; i < size; i++) {
+
+       tx_buffer.buffer[tx_buffer.iHead] = *buffer;
+       tx_buffer.iHead = (tx_buffer.iHead + 1) % sizeof(tx_buffer.buffer);
+       buffer++;
+
+       while(tx_buffer.iHead == tx_buffer.iTail && millis()<timeout);
+       if (tx_buffer.iHead == tx_buffer.iTail) break;
+   }
+
+   if (transmitting == 0) {
+       if (tx_buffer.iHead > tx_buffer.iTail) {
+           transmitting = tx_buffer.iHead - tx_buffer.iTail;
+       } else {
+           transmitting = sizeof(tx_buffer.buffer) - tx_buffer.iTail;
+       }
+       CDC_Transmit_FS(&tx_buffer.buffer[tx_buffer.iTail], transmitting);
+
+       return size;
+   }
+
   return 0;
 
-
-/*   uint8_t i;
-
-  if(hUsbDeviceFS.dev_state == USBD_STATE_CONFIGURED){
-
-    //HAL_NVIC_DisableIRQ(USB_LP_CAN1_RX0_IRQn);
-    for(i=0;i<200;i++)
-      if(CDC_Transmit_FS((uint8_t*)buffer, size) == USBD_OK){
-        return size;
-        //break;
-      }
-
-
-    //HAL_NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
-  }
-  return 0; */
 }
 
 size_t SerialUSBClass::write(uint8_t c) {
   return write(&c, 1);
+}
+
+void SerialUSBClass::CDC_TxHandler() {
+  tx_buffer.iTail += transmitting;
+  tx_buffer.iTail = tx_buffer.iTail % sizeof(tx_buffer.buffer);
+
+  if (tx_buffer.iHead != tx_buffer.iTail) {
+      if (tx_buffer.iHead > tx_buffer.iTail) {
+         transmitting = tx_buffer.iHead - tx_buffer.iTail;
+     } else {
+         transmitting = sizeof(tx_buffer.buffer) - tx_buffer.iTail;
+     }
+     CDC_Transmit_FS(tx_buffer.buffer + tx_buffer.iTail, transmitting);
+  } else {
+      transmitting = 0;
+  }
 }
 
 void SerialUSBClass::CDC_RxHandler (uint8_t* Buf, uint16_t Len){
@@ -179,7 +179,9 @@ SerialUSBClass::operator bool()
 		return false;
 
 	bool result = false;
-
+	if(hUsbDeviceFS.dev_state == USBD_STATE_CONFIGURED){
+      result = true;
+	}
 /* 	if (_usbLineInfo.lineState > 0)
 	{
 		result = true;
@@ -219,27 +221,12 @@ bool SerialUSBClass::rts() {
   return 0;
 }
 
-
-extern PCD_HandleTypeDef hpcd_USB_FS;
-extern PCD_HandleTypeDef hpcd_USB_OTG_FS;
-
-//F1
-extern "C" void USB_LP_CAN1_RX0_IRQHandler(void) {
-  HAL_PCD_IRQHandler(&hpcd_USB_FS);
-}
-//F4 F7
-extern "C" void OTG_FS_IRQHandler(void) {
-  HAL_PCD_IRQHandler(&hpcd_USB_OTG_FS);
-}
-//L0
-extern "C" void USB_IRQHandler(void) {
-  HAL_PCD_IRQHandler(&hpcd_USB_FS);
+extern "C" void USBSerial_Tx_Handler(){
+  SerialUSB.CDC_TxHandler();
 }
 
-extern "C" void USBSerial_Rx_Handler(uint8_t *data, uint16_t len){ 
-  SerialUSB.CDC_RxHandler(data, len); 
+extern "C" void USBSerial_Rx_Handler(uint8_t *data, uint16_t len){
+  SerialUSB.CDC_RxHandler(data, len);
 }
 
 SerialUSBClass SerialUSB;
-
-#endif

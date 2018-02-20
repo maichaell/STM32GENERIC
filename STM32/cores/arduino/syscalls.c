@@ -42,9 +42,9 @@
 // Helper macro to mark unused parameters and prevent compiler warnings.
 // Appends _UNUSED to the variable name to prevent accidentally using them.
 #ifdef __GNUC__
-#define UNUSED(x) x ## _UNUSED __attribute__((__unused__))
+#define UNUSED_PARAM(x) x ## _UNUSED __attribute__((__unused__))
 #else
-#define UNUSED(x) x ## _UNUSED
+#define UNUSED_PARAM(x) x ## _UNUSED
 #endif
 
 /*----------------------------------------------------------------------------
@@ -62,63 +62,65 @@ extern void _exit( int status ) ;
 extern void _kill( int pid, int sig ) ;
 extern int _getpid ( void ) ;
 
+static unsigned char *heap_brk = NULL;
+static unsigned char *heap_end = NULL;
+
+void setHeap(unsigned char *start, unsigned char *end) {
+    heap_brk = start;
+    heap_end = end;
+}
+
 extern caddr_t _sbrk ( int incr )
 {
-  static unsigned char *heap = NULL ;
-  unsigned char *prev_heap ;
+   caddr_t prev_heap;
 
-  if ( heap == NULL )
+  if ( heap_brk == NULL )
   {
-    heap = (unsigned char *)&_end ;
+      heap_brk = (unsigned char *)&_end ;
   }
-  prev_heap = heap;
+  prev_heap = (caddr_t)heap_brk;
 
-  heap += incr ;
+  if (heap_end != NULL && (heap_brk + incr) > heap_end) {
+      return (caddr_t)-1;
+  }
+  
+  heap_brk += incr ;
 
-  return (caddr_t) prev_heap ;
+  return prev_heap ;
 }
 
-extern int link( UNUSED(char *cOld), UNUSED(char *cNew) )
+extern int link( UNUSED_PARAM(char *cOld), UNUSED_PARAM(char *cNew) )
 {
   return -1 ;
 }
 
-extern int _close( UNUSED(int file) )
+extern int _close( UNUSED_PARAM(int file) )
 {
   return -1 ;
 }
 
-extern int _fstat( UNUSED(int file), struct stat *st )
+extern int _fstat( UNUSED_PARAM(int file), struct stat *st )
 {
   st->st_mode = S_IFCHR ;
 
   return 0 ;
 }
 
-extern int _isatty( UNUSED(int file) )
+extern int _isatty( UNUSED_PARAM(int file) )
 {
   return 1 ;
 }
 
-extern int _lseek( UNUSED(int file), UNUSED(int ptr), UNUSED(int dir) )
+extern int _lseek( UNUSED_PARAM(int file), UNUSED_PARAM(int ptr), UNUSED_PARAM(int dir) )
 {
   return 0 ;
 }
 
-extern int _read(UNUSED(int file), UNUSED(char *ptr), UNUSED(int len) )
+extern int _read(UNUSED_PARAM(int file), UNUSED_PARAM(char *ptr), UNUSED_PARAM(int len) )
 {
   return 0 ;
 }
 
-extern int _write( UNUSED(int file), char *ptr, int len )
-{
-  int iIndex = 0;
-
-  for ( iIndex=0 ; iIndex < len ; iIndex++) {
-    //TODO write to Serial
-  }
-  return iIndex ;
-}
 
 extern void _exit( int status )
 {
@@ -127,7 +129,7 @@ extern void _exit( int status )
   for ( ; ; ) ;
 }
 
-extern void _kill( UNUSED(int pid), UNUSED(int sig) )
+extern void _kill( UNUSED_PARAM(int pid), UNUSED_PARAM(int sig) )
 {
   return ;
 }

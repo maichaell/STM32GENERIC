@@ -25,6 +25,7 @@
 #include <string.h>
 #include <math.h>
 #include "Arduino.h"
+#include <stdarg.h>
 
 #include "Print.h"
 
@@ -43,15 +44,7 @@ size_t Print::write(const uint8_t *buffer, size_t size)
 
 size_t Print::print(const __FlashStringHelper *ifsh)
 {
-  PGM_P p = reinterpret_cast<PGM_P>(ifsh);
-  size_t n = 0;
-  while (1) {
-    unsigned char c = pgm_read_byte(p++);
-    if (c == 0) break;
-    if (write(c)) n++;
-    else break;
-  }
-  return n;
+    return print(reinterpret_cast<const char *>(ifsh));
 }
 
 size_t Print::print(const String &s)
@@ -101,6 +94,28 @@ size_t Print::print(long n, int base)
 }
 
 size_t Print::print(unsigned long n, int base)
+{
+  if (base == 0) return write(n);
+  else return printNumber(n, base);
+}
+
+size_t Print::print(long long n, int base)
+{
+  if (base == 0) {
+    return write(n);
+  } else if (base == 10) {
+    if (n < 0) {
+      int t = print('-');
+      n = -n;
+      return printNumber(n, 10) + t;
+    }
+    return printNumber(n, 10);
+  } else {
+    return printNumber(n, base);
+  }
+}
+
+size_t Print::print(unsigned long long n, int base)
 {
   if (base == 0) return write(n);
   else return printNumber(n, base);
@@ -184,6 +199,20 @@ size_t Print::println(unsigned long num, int base)
   return n;
 }
 
+size_t Print::println(long long num, int base)
+{
+  size_t n = print(num, base);
+  n += println();
+  return n;
+}
+
+size_t Print::println(unsigned long long num, int base)
+{
+  size_t n = print(num, base);
+  n += println();
+  return n;
+}
+
 size_t Print::println(double num, int digits)
 {
   size_t n = print(num, digits);
@@ -200,9 +229,9 @@ size_t Print::println(const Printable& x)
 
 // Private Methods /////////////////////////////////////////////////////////////
 
-size_t Print::printNumber(unsigned long n, uint8_t base)
+size_t Print::printNumber(unsigned long long n, uint8_t base)
 {
-  char buf[8 * sizeof(long) + 1]; // Assumes 8-bit chars plus zero byte.
+  char buf[8 * sizeof(long long) + 1]; // Assumes 8-bit chars plus zero byte.
   char *str = &buf[sizeof(buf) - 1];
 
   *str = '\0';
@@ -263,4 +292,27 @@ size_t Print::printFloat(double number, uint8_t digits)
   } 
   
   return n;
+}
+
+size_t Print::printf(const char* format, ...) {
+
+    va_list args;
+    va_start(args, format);
+    size_t ret = printf(format, args);
+    va_end(args);
+
+    return ret;
+}
+
+size_t Print::printf(const char* format, va_list args) {
+    int fileno = stm32SetPrintOutput(this);
+
+    size_t ret = 0;
+    if (fileno > 0) {
+       ret = vdprintf(fileno, format, args);
+    }
+
+    stm32SetPrintOutput(NULL);
+
+    return ret;
 }

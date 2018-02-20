@@ -102,19 +102,31 @@
                     
                         
 <li >
-    <a href="../uart/">Serial UART</a>
+    <a href="../uart/">UART Serial</a>
 </li>
 
                     
                         
 <li >
-    <a href="../usb_cdc/">Serial USB</a>
+    <a href="../usb_cdc/">USB Serial</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../usb_msc/">USB Mass Storage</a>
 </li>
 
                     
                         
 <li >
     <a href="../stm32_hal/">STM32 HAL</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../build_macros/">Build macros</a>
 </li>
 
                     
@@ -135,7 +147,202 @@
                     
                         
 <li >
-    <a href="../boards/">Boards list</a>
+    <a href="../board_MapleMini_F103CB/">MapleMini F103CB</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../board_BluePill/">BluePill F103CB</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../board_Generic103RF/">Generic F103RF</a>
+</li>
+
+                    
+                        
+  <li class="dropdown-submenu">
+    <a tabindex="-1" href="">huaweiwx F103Z boards</a>
+    <ul class="dropdown-menu">
+        
+            
+<li >
+    <a href="../board_F103ZE1/">RedBull(F103ZE)</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_F103ZE/">GENERIC(STM32F103ZE)</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_F103ZF/">GENERIC(STM32F103ZF)</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_F103ZG/">GENERIC(STM32F103ZG)</a>
+</li>
+
+        
+    </ul>
+  </li>
+
+                    
+                        
+  <li class="dropdown-submenu">
+    <a tabindex="-1" href="">BLUE F103VE/ZE/ZG boards</a>
+    <ul class="dropdown-menu">
+        
+            
+<li >
+    <a href="../board_BLUE_F103VE/">BLUE F103VE vcc-gnd.com</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_BLUE_F103ZE/">BLUE F103ZE vcc-gnd.com</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_BLUE_F103ZG/">BLUE F103ZG vcc-gnd.com</a>
+</li>
+
+        
+    </ul>
+  </li>
+
+                    
+                        
+  <li class="dropdown-submenu">
+    <a tabindex="-1" href="">BLACK F407VE/ZE/ZG boards</a>
+    <ul class="dropdown-menu">
+        
+            
+<li >
+    <a href="../board_BLACK_F407VE/">BLACK F407VE (V2.0)</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_BLACK_F407ZE/">BLACK F407ZE (V3.0)</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_BLACK_F407ZG/">BLACK F407ZG (M4 DEMO)</a>
+</li>
+
+        
+    </ul>
+  </li>
+
+                    
+                        
+  <li class="dropdown-submenu">
+    <a tabindex="-1" href="">Nucleo-64 boards</a>
+    <ul class="dropdown-menu">
+        
+            
+<li >
+    <a href="../board_Nucleo_F030R8/">Nucleo-F030R8</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_Nucleo_F103RB/">Nucleo-F103RB</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_Nucleo_F303RE/">Nucleo-F303RE</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_Nucleo_F401RE/">Nucleo-F401RE</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_Nucleo_F411RE/">Nucleo-F411RE</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_Nucleo_L053R8/">Nucleo-L053R8</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_Nucleo_L152RE/">Nucleo-L152RE</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_Nucleo_L476RG/">Nucleo-L476RG</a>
+</li>
+
+        
+    </ul>
+  </li>
+
+                    
+                        
+  <li class="dropdown-submenu">
+    <a tabindex="-1" href="">Nucleo-144 boards</a>
+    <ul class="dropdown-menu">
+        
+            
+<li >
+    <a href="../board_Nucleo_F767ZI/">Nucleo-F767ZI</a>
+</li>
+
+        
+    </ul>
+  </li>
+
+                    
+                        
+<li >
+    <a href="../board_DISCOVERY_L053C8/">Discovery L053C8</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../board_DISCOVERY_F303VC/">Discovery F303VC</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../board_DISCOVERY_F407VG/">Discovery F407VG</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../board_DISCOVERY_F746NG/">Discovery F746NG</a>
 </li>
 
                     
@@ -204,13 +411,13 @@
         
             <li><a href="#uint8_t-i2sclassbegini2s_mode_t-mode-uint32_t-samplerate-uint8_t-bitspersample">uint8_t I2SClass::begin(i2s_mode_t mode, uint32_t sampleRate, uint8_t bitsPerSample);</a></li>
         
-            <li><a href="#writeuint16_t-data">write(uint16_t data);</a></li>
+            <li><a href="#writeint16_t-data">write(int16_t data);</a></li>
         
-            <li><a href="#write32uint32_t-data">write32(uint32_t data);</a></li>
+            <li><a href="#writeint16_t-data-uint16_t-size">write(int16_t *data, uint16_t size);</a></li>
         
-            <li><a href="#writeuint16_t-data-uint16_t-size">write(uint16_t *data, uint16_t size);</a></li>
+            <li><a href="#setbufferuint16_t-buffer-int-buffersize">setBuffer(uint16_t *buffer, int bufferSize);</a></li>
         
-            <li><a href="#writeuint32_t-data-uint16_t-size">write(uint32_t *data, uint16_t size);</a></li>
+            <li><a href="#int-getbuffersize">int getBufferSize();</a></li>
         
             <li><a href="#stm32setsduint8_t-pin">stm32SetSD(uint8_t pin);</a></li>
         
@@ -227,7 +434,8 @@
                 <div class="col-md-9" role="main">
 
 <h2 id="i2s">I2S</h2>
-<p>Not to be confused with <a href="../i2c/">I2C</a>, is a protocol for connecting to audio devices.</p>
+<p>Not to be confused with <a href="../i2c/">I2C</a>, is a protocol for connecting to audio devices.
+The samples are sent continuously in the background using DMA transfer. </p>
 <h2 id="this-library-is-in-beta-and-the-api-implementation-is-subject-to-change"><strong>This library is in beta, and the API / implementation is subject to change!</strong></h2>
 <p>To use this library, include it in your code:</p>
 <pre><code class="c++">#include &quot;I2S.h&quot;
@@ -250,16 +458,16 @@ I2SClass i2s(...);
 <ul>
 <li>mode: one of I2S_PHILIPS_MODE,I2S_RIGHT_JUSTIFIED_MODE, I2S_LEFT_JUSTIFIED_MODE</li>
 <li>sampleRate: between 8000 and 96000</li>
-<li>bitsPerSample: 16, 24 or 32</li>
+<li>bitsPerSample: 16. <strong> (Note: 24 or 32 bit per sample currently not working!) </strong></li>
 </ul>
-<h4 id="writeuint16_t-data"><strong><code>write(uint16_t data);</code></strong></h4>
-<p>Send 16 bit data. <strong>Currently in blocking mode</strong></p>
-<h4 id="write32uint32_t-data"><strong><code>write32(uint32_t data);</code></strong></h4>
-<p>Send 32 bit data. <strong>Currently in blocking mode</strong></p>
-<h4 id="writeuint16_t-data-uint16_t-size"><strong><code>write(uint16_t *data, uint16_t size);</code></strong></h4>
-<p>Send 16 bit data. <strong>Currently in blocking mode</strong></p>
-<h4 id="writeuint32_t-data-uint16_t-size"><strong><code>write(uint32_t *data, uint16_t size);</code></strong></h4>
-<p>Send 32 bit data. <strong>Currently in blocking mode</strong></p>
+<h4 id="writeint16_t-data"><strong><code>write(int16_t data);</code></strong></h4>
+<p>Send 16 bit data. Blocks if there is no space left in the internal buffer.</p>
+<h4 id="writeint16_t-data-uint16_t-size"><strong><code>write(int16_t *data, uint16_t size);</code></strong></h4>
+<p>Send 16 bit data. Blocks if there is no space left in the internal buffer.</p>
+<h4 id="setbufferuint16_t-buffer-int-buffersize"><strong><code>setBuffer(uint16_t *buffer, int bufferSize);</code></strong></h4>
+<p>Set the DMA transfer buffer size. The default buffer is 2048 * 16 bits.</p>
+<h4 id="int-getbuffersize"><strong><code>int getBufferSize();</code></strong></h4>
+<p>Returns size of the transfer buffer.</p>
 <h4 id="stm32setsduint8_t-pin"><strong><code>stm32SetSD(uint8_t pin);</code></strong></h4>
 <p>Set the alternative SD pin used by this I2S.</p>
 <p><strong>This method must be called before begin()!</strong></p>

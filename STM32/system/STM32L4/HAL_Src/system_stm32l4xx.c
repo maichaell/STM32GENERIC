@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    system_stm32l4xx.c
   * @author  MCD Application Team
-  * @version V1.1.2
-  * @date    12-September-2016
+  * @version V1.3.0
+  * @date    17-February-2017
   * @brief   CMSIS Cortex-M4 Device Peripheral Access Layer System Source File
   *
   *   This file provides two functions and one global variable to be called from
@@ -68,7 +68,7 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; COPYRIGHT(c) 2016 STMicroelectronics</center></h2>
+  * <h2><center>&copy; COPYRIGHT(c) 2017 STMicroelectronics</center></h2>
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -188,7 +188,11 @@
 /** @addtogroup STM32L4xx_System_Private_Functions
   * @{
   */
-
+  
+//Override in variant to run beforer constructors
+__attribute__((weak)) void preinitVariant(void) {
+    
+}
 /**
   * @brief  Setup the microcontroller system.
   * @param  None
@@ -226,6 +230,7 @@ void SystemInit(void)
 #else
   SCB->VTOR = FLASH_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal FLASH */
 #endif
+  preinitVariant();
 }
 
 /**

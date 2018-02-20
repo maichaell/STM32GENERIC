@@ -102,19 +102,31 @@
                     
                         
 <li >
-    <a href="../uart/">Serial UART</a>
+    <a href="../uart/">UART Serial</a>
 </li>
 
                     
                         
 <li >
-    <a href="../usb_cdc/">Serial USB</a>
+    <a href="../usb_cdc/">USB Serial</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../usb_msc/">USB Mass Storage</a>
 </li>
 
                     
                         
 <li >
     <a href="../stm32_hal/">STM32 HAL</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../build_macros/">Build macros</a>
 </li>
 
                     
@@ -135,7 +147,202 @@
                     
                         
 <li >
-    <a href="../boards/">Boards list</a>
+    <a href="../board_MapleMini_F103CB/">MapleMini F103CB</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../board_BluePill/">BluePill F103CB</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../board_Generic103RF/">Generic F103RF</a>
+</li>
+
+                    
+                        
+  <li class="dropdown-submenu">
+    <a tabindex="-1" href="">huaweiwx F103Z boards</a>
+    <ul class="dropdown-menu">
+        
+            
+<li >
+    <a href="../board_F103ZE1/">RedBull(F103ZE)</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_F103ZE/">GENERIC(STM32F103ZE)</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_F103ZF/">GENERIC(STM32F103ZF)</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_F103ZG/">GENERIC(STM32F103ZG)</a>
+</li>
+
+        
+    </ul>
+  </li>
+
+                    
+                        
+  <li class="dropdown-submenu">
+    <a tabindex="-1" href="">BLUE F103VE/ZE/ZG boards</a>
+    <ul class="dropdown-menu">
+        
+            
+<li >
+    <a href="../board_BLUE_F103VE/">BLUE F103VE vcc-gnd.com</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_BLUE_F103ZE/">BLUE F103ZE vcc-gnd.com</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_BLUE_F103ZG/">BLUE F103ZG vcc-gnd.com</a>
+</li>
+
+        
+    </ul>
+  </li>
+
+                    
+                        
+  <li class="dropdown-submenu">
+    <a tabindex="-1" href="">BLACK F407VE/ZE/ZG boards</a>
+    <ul class="dropdown-menu">
+        
+            
+<li >
+    <a href="../board_BLACK_F407VE/">BLACK F407VE (V2.0)</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_BLACK_F407ZE/">BLACK F407ZE (V3.0)</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_BLACK_F407ZG/">BLACK F407ZG (M4 DEMO)</a>
+</li>
+
+        
+    </ul>
+  </li>
+
+                    
+                        
+  <li class="dropdown-submenu">
+    <a tabindex="-1" href="">Nucleo-64 boards</a>
+    <ul class="dropdown-menu">
+        
+            
+<li >
+    <a href="../board_Nucleo_F030R8/">Nucleo-F030R8</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_Nucleo_F103RB/">Nucleo-F103RB</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_Nucleo_F303RE/">Nucleo-F303RE</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_Nucleo_F401RE/">Nucleo-F401RE</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_Nucleo_F411RE/">Nucleo-F411RE</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_Nucleo_L053R8/">Nucleo-L053R8</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_Nucleo_L152RE/">Nucleo-L152RE</a>
+</li>
+
+        
+            
+<li >
+    <a href="../board_Nucleo_L476RG/">Nucleo-L476RG</a>
+</li>
+
+        
+    </ul>
+  </li>
+
+                    
+                        
+  <li class="dropdown-submenu">
+    <a tabindex="-1" href="">Nucleo-144 boards</a>
+    <ul class="dropdown-menu">
+        
+            
+<li >
+    <a href="../board_Nucleo_F767ZI/">Nucleo-F767ZI</a>
+</li>
+
+        
+    </ul>
+  </li>
+
+                    
+                        
+<li >
+    <a href="../board_DISCOVERY_L053C8/">Discovery L053C8</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../board_DISCOVERY_F303VC/">Discovery F303VC</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../board_DISCOVERY_F407VG/">Discovery F407VG</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../board_DISCOVERY_F746NG/">Discovery F746NG</a>
 </li>
 
                     
@@ -211,11 +418,11 @@
         
             <li><a href="#transferuint8_t-buf-size_t-count">transfer(uint8_t *buf, size_t count);</a></li>
         
-            <li><a href="#usinginterrupt">usingInterrupt();</a></li>
+            <li><a href="#transfertx-rxbuffer-size_t-count-callback">transfer(tx, rxBuffer, size_t count[, callback]);</a></li>
         
-            <li><a href="#uint8_t-dmasenduint8_t-transmitbuf-uint16_t-length-bool-minc-true">uint8_t dmaSend(uint8_t *transmitBuf, uint16_t length, bool minc = true);</a></li>
+            <li><a href="#void-flushvoid">void flush(void);</a></li>
         
-            <li><a href="#uint8_t-dmatransferuint8_t-transmitbuf-uint8_t-receivebuf-uint16_t-length">uint8_t dmaTransfer(uint8_t *transmitBuf, uint8_t *receiveBuf, uint16_t length);</a></li>
+            <li><a href="#bool-donevoid">bool done(void);</a></li>
         
             <li><a href="#stm32setmosiuint8_t-pin">stm32SetMOSI(uint8_t pin);</a></li>
         
@@ -287,26 +494,80 @@ void setup() {
 <pre><code class="c++">SPI.beginTransaction(SPISettings(16000000, MSBFIRST, SPI_MODE0));
 </code></pre>
 
-<p>TODO disable interrupt in pin if <code>usingInterrupt</code> was used</p>
 <h4 id="endtransaction"><strong><code>endTransaction();</code></strong></h4>
-<p>TODO enable interrupt in pin if <code>usingInterrupt</code> was used</p>
 <h4 id="uint8_t-transferuint8_t-data"><strong><code>uint8_t transfer(uint8_t data);</code></strong></h4>
 <p>Send a 8 bits on SPI, and return the received 8 bit data.</p>
 <h4 id="uint16_t-transfer16uint16_t-data"><strong><code>uint16_t transfer16(uint16_t data);</code></strong></h4>
 <p>Send a 16 bits on SPI, and return the received 16 bit data.</p>
 <h4 id="transferuint8_t-buf-size_t-count"><strong><code>transfer(uint8_t *buf, size_t count);</code></strong></h4>
 <p>Send the data in the buffer. The received data is stored in the same buffer.</p>
-<h4 id="usinginterrupt"><strong><code>usingInterrupt();</code></strong></h4>
-<p>TODO not yet implemented</p>
-<h4 id="uint8_t-dmasenduint8_t-transmitbuf-uint16_t-length-bool-minc-true"><strong><code>uint8_t dmaSend(uint8_t *transmitBuf, uint16_t length, bool minc = true);</code></strong></h4>
-<p>Send data using DMA in <strong>blocking mode</strong>.</p>
-<ul>
-<li>minc: false - only send the first byte of the <code>transmitBuf</code>, <code>length</code> times</li>
-<li>minc: true - send <code>length</code> bytes from the <code>transmitBuf</code></li>
-</ul>
-<h4 id="uint8_t-dmatransferuint8_t-transmitbuf-uint8_t-receivebuf-uint16_t-length"><strong><code>uint8_t dmaTransfer(uint8_t *transmitBuf, uint8_t *receiveBuf, uint16_t length);</code></strong></h4>
-<p>Send and receive data using DMA in <strong>blocking mode</strong>.</p>
-<p>If <code>transmitBuf</code> is NULL, <code>0xFF</code> is transmitted instead.</p>
+<h4 id="transfertx-rxbuffer-size_t-count-callback"><strong><code>transfer(tx, rxBuffer, size_t count[, callback]);</code></strong></h4>
+<table>
+<thead>
+<tr>
+<th><code>tx</code></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>uint8_t txData</td>
+<td>the same byte is sent <code>count</code> times</td>
+</tr>
+<tr>
+<td>uint8_t *txBuffer</td>
+<td>the buffer is sent</td>
+</tr>
+<tr>
+<td>NULL</td>
+<td>0xFF is sent <code>count</code> times</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th><code>rxBuffer</code></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>uint8_t *rxBuffer</td>
+<td>the received data is stored in the rxBuffer</td>
+</tr>
+<tr>
+<td>NULL</td>
+<td>the received data is ignored</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th><code>callback</code></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>parameter not set</td>
+<td>transfer is blocking</td>
+</tr>
+<tr>
+<td>NULL</td>
+<td>transfer is <strong>non-blocking</strong>, sends the data using DMA, and returns immediately.</td>
+</tr>
+<tr>
+<td>function pointer</td>
+<td>transfer is <strong>non-blocking</strong>, sends the data using DMA, and returns immediately.  At the end of the transfer, the callback function is called in interrupt.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="void-flushvoid"><strong><code>void flush(void);</code></strong></h4>
+<p>Waits for the last non-blocking transfer to complete.</p>
+<h4 id="bool-donevoid"><strong><code>bool done(void);</code></strong></h4>
+<p>Returns true if the last non-blocking transfer is completed.</p>
 <h4 id="stm32setmosiuint8_t-pin"><strong><code>stm32SetMOSI(uint8_t pin);</code></strong></h4>
 <p>Set the MOSI pin used by this SPI.</p>
 <p><strong>This method must be called before begin()!</strong></p>

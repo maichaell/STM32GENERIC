@@ -1,3 +1,25 @@
+/*
+  Copyright (c) 2017 Daniel Fekete
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
+
 /**
  * TODO: Check if txBuffer is NULL in every method
  * TODO: generate different BUFFER_SIZE values for different boards based on available memory
@@ -5,6 +27,7 @@
  * TODO: add constructor with custom buffer parameter
  */
 #include "SerialUART.h"
+#include "STM32System.h"
 #include "stm32_gpio_af.h"
 
 /**
@@ -86,6 +109,13 @@ void SerialUART::begin(const uint32_t baud) {
   }
   #endif
   
+  #ifdef UART4
+  if (handle->Instance == UART4) {
+    __HAL_RCC_UART4_CLK_ENABLE();
+    HAL_NVIC_SetPriority(UART4_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(UART4_IRQn);
+  }
+  #endif
   #ifdef USART4
   if (handle->Instance == USART4) {
     __HAL_RCC_USART4_CLK_ENABLE();
@@ -94,6 +124,29 @@ void SerialUART::begin(const uint32_t baud) {
   }
   #endif
   
+  #ifdef UART5
+  if (handle->Instance == UART5) {
+    __HAL_RCC_UART5_CLK_ENABLE();
+    HAL_NVIC_SetPriority(UART5_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(UART5_IRQn);
+  }
+  #endif
+  #ifdef USART5
+  if (handle->Instance == USART5) {
+    __HAL_RCC_USART5_CLK_ENABLE();
+    HAL_NVIC_SetPriority(USART5_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART5_IRQn);
+  }
+  #endif
+
+  #ifdef USART6
+  if (handle->Instance == USART6) {
+    __HAL_RCC_USART6_CLK_ENABLE();
+    HAL_NVIC_SetPriority(USART6_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART6_IRQn);
+  }
+  #endif
+
   stm32AfUARTInit(instance, rxPort, rxPin, txPort, txPin);
   
   handle->Init.BaudRate = baud; 
@@ -106,6 +159,15 @@ void SerialUART::begin(const uint32_t baud) {
   HAL_UART_Init(handle);
 
   HAL_UART_Receive_IT(handle, &receive_buffer, 1);
+
+
+  if (stdoutStream == NULL) {
+      #if defined(MENU_SERIAL) && MENU_SERIAL == SerialUART1
+          stdoutStream = this;
+      #elif defined(MENU_SERIAL_AUTO) && MENU_SERIAL_AUTO == SerialUART1
+          stdoutStream = this;
+      #endif
+  }
     
 }
 
@@ -122,6 +184,7 @@ int SerialUART::peek() {
 
 void SerialUART::flush() {
     
+    while(txEnd % BUFFER_SIZE != txStart % BUFFER_SIZE);
 }
 
 int SerialUART::read() {
@@ -181,6 +244,13 @@ extern "C" void USART3_IRQHandler(void) {
 SerialUART SerialUART3(USART3);
 #endif
 
+#ifdef UART4
+extern "C" void UART4_IRQHandler(void) {
+  interruptUART = &SerialUART4;
+  HAL_UART_IRQHandler(interruptUART->handle);
+}
+SerialUART SerialUART4(UART4);
+#endif
 #ifdef USART4
 extern "C" void USART4_IRQHandler(void) {
   interruptUART = &SerialUART4;
@@ -189,6 +259,28 @@ extern "C" void USART4_IRQHandler(void) {
 SerialUART SerialUART4(USART4);
 #endif
 
+#ifdef UART5
+extern "C" void UART5_IRQHandler(void) {
+  interruptUART = &SerialUART5;
+  HAL_UART_IRQHandler(interruptUART->handle);
+}
+SerialUART SerialUART5(UART5);
+#endif
+#ifdef USART5
+extern "C" void USART5_IRQHandler(void) {
+  interruptUART = &SerialUART5;
+  HAL_UART_IRQHandler(interruptUART->handle);
+}
+SerialUART SerialUART5(USART5);
+#endif
+
+#ifdef USART6
+extern "C" void USART6_IRQHandler(void) {
+  interruptUART = &SerialUART6;
+  HAL_UART_IRQHandler(interruptUART->handle);
+}
+SerialUART SerialUART6(USART6);
+#endif
 
 extern "C" void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
   interruptUART->txStart++;

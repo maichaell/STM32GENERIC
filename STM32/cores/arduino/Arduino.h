@@ -25,6 +25,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <math.h>
+#include <bit_constants.h>
 
 // #include <avr/pgmspace.h>
 // #include <avr/io.h>
@@ -68,8 +69,8 @@ void yield(void);
 #define degrees(rad) ((rad)*RAD_TO_DEG)
 #define sq(x) ((x)*(x))
 
-#define interrupts() sei()
-#define noInterrupts() cli()
+#define interrupts() __enable_irq()
+#define noInterrupts() __disable_irq()
 
 #define clockCyclesPerMicrosecond() ( F_CPU / 1000000L )
 #define clockCyclesToMicroseconds(a) ( (a) / clockCyclesPerMicrosecond() )
@@ -101,16 +102,21 @@ void initVariant(void);
 int atexit(void (*func)()) __attribute__((weak));
 
 void pinMode(uint8_t, uint8_t);
-void digitalWrite(uint8_t, uint8_t);
-int digitalRead(uint8_t);
+//void digitalWrite(uint8_t, uint8_t);
+//int digitalRead(uint8_t);
 int analogRead(uint8_t);
+void analogReadResolution(int resolution);
 void analogReference(uint8_t mode);
 void analogWrite(uint8_t, int);
+void analogWriteResolution(int bits);
 
-unsigned long millis(void);
-unsigned long micros(void);
-void delay(unsigned long);
-void delayMicroseconds(uint32_t us);
+//STM32GENERIC only:
+void pwmWrite(uint8_t pin, int dutyCycle16Bits, int frequency, int durationMillis);
+
+//unsigned long millis(void);
+//unsigned long micros(void);
+//void delay(unsigned long);
+//void delayMicroseconds(uint32_t us);
 unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout);
 unsigned long pulseInLong(uint8_t pin, uint8_t state, unsigned long timeout);
 
@@ -164,7 +170,7 @@ uint16_t makeWord(byte h, byte l);
 unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout = 1000000L);
 unsigned long pulseInLong(uint8_t pin, uint8_t state, unsigned long timeout = 1000000L);
 
-void tone(uint8_t _pin, unsigned int frequency, unsigned long duration = 0);
+extern "C" void tone(uint8_t _pin, unsigned int frequency, unsigned long duration = 0);
 void noTone(uint8_t _pin);
 
 // WMath prototypes
@@ -178,11 +184,13 @@ long map(long, long, long, long, long);
 #include "stm32_def.h"
 #include "stm32_clock.h"
 #include "stm32_gpio.h"
+#include "stm32_debug.h"
 
 #ifdef __cplusplus
 
 #include "SerialUART.h"
 #include <SerialUSB.h>
+#include <STM32System.h>
 
 #if defined(MENU_SERIAL)
 #define Serial MENU_SERIAL
