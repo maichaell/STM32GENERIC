@@ -427,6 +427,12 @@ BLACK_F407XX.menu.subboard.BLACK_F407ZG.build.variant=BLACK_F407ZG
 BLACK_F407XX.menu.subboard.BLACK_F407ZG.build.board=BLACK_F407ZG
 BLACK_F407XX.menu.subboard.BLACK_F407ZG.build.extra_flags=-DSTM32F407ZG -DHSE_VALUE=8000000
 
+BLACK_F407XX.menu.subboard.BLUE_F407VE_MINI=BLUE F407VE MINI (V2.0)
+BLACK_F407XX.menu.subboard.BLUE_F407VE_MINI.upload.maximum_size=524288
+BLACK_F407XX.menu.subboard.BLUE_F407VE_MINI.upload.maximum_data_size=131072
+BLACK_F407XX.menu.subboard.BLUE_F407VE_MINI.build.variant=BLUE_F407VE_MINI
+BLACK_F407XX.menu.subboard.BLUE_F407VE_MINI.build.board=BLUE_F407VE
+BLACK_F407XX.menu.subboard.BLUE_F407VE_MINI.build.extra_flags=-DSTM32F407VE -DHSE_VALUE=25000000
 ################################################################################
 # NUCLEO 64 board
 
