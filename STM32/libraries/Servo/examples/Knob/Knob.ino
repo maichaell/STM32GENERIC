@@ -1,7 +1,6 @@
 /*
  Controlling a servo position using a potentiometer (variable resistor)
  by Michal Rinott <http://people.interaction-ivrea.it/m.rinott>
-
  modified on 8 Nov 2013
  by Scott Fitzgerald
  http://www.arduino.cc/en/Tutorial/Knob
@@ -24,4 +23,3 @@ void loop() {
   myservo.write(val);                  // sets the servo position according to the scaled value
   delay(15);                           // waits for the servo to get there
 }
-

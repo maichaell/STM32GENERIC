@@ -1,9 +1,8 @@
-#include "stm32_build_defines.h"
 #include "stm32_def.h"
-
-#include "Arduino.h"
+#include <Arduino.h>
 #include "syscalls.h"
 
+extern "C" void SystemClock_Config(void) __weak;
 extern "C" void SystemClock_Config(void) {
     RCC_OscInitTypeDef RCC_OscInitStruct;
     RCC_ClkInitTypeDef RCC_ClkInitStruct;
@@ -42,7 +41,10 @@ extern "C" void SystemClock_Config(void) {
     HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
     /* SysTick_IRQn interrupt configuration */
-    HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
+#if FREERTOS
+  HAL_NVIC_SetPriority(PendSV_IRQn, SYSTICK_INT_PRIORITY, 0);
+#endif
+  HAL_NVIC_SetPriority(SysTick_IRQn, SYSTICK_INT_PRIORITY, 0);
 }
 
 extern "C" void preinitVariant() {
@@ -50,9 +52,9 @@ extern "C" void preinitVariant() {
     setHeap((unsigned char*)0xC0000000, (unsigned char*)(0xC0000000 + 8 * 1024 * 1024));
 }
 
+#define TXPIN PA9  
+#define RXPIN PB7
 extern "C" void initVariant() {
-
     //UART1 is connected to ST-Link V2.1 as Virtual Com port on non-default PA9/PB7 pins
-    SerialUART1.stm32SetTX(PA9);
-    SerialUART1.stm32SetRX(PB7);
+    SerialUART1.setPins(TXPIN,RXPIN);
 }

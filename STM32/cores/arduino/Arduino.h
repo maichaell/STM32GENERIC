@@ -20,18 +20,14 @@
 #ifndef Arduino_h
 #define Arduino_h
 
+#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 #include <math.h>
-#include <bit_constants.h>
-
-// #include <avr/pgmspace.h>
-// #include <avr/io.h>
-// #include <avr/interrupt.h>
-
-//#include "binary.h"
+#include "bit_constants.h"
+#include "util/toolschain.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -52,8 +48,10 @@ void yield(void);
 #define SERIAL  0x0
 #define DISPLAY 0x1
 
-#define LSBFIRST 0
-#define MSBFIRST 1
+enum BitOrder {  /*compatible with arduino sam huaweiwx@sina.com 2018.1.12*/
+	LSBFIRST = 0,
+	MSBFIRST = 1
+};
 
 #define CHANGE 1
 #define FALLING 2
@@ -64,7 +62,7 @@ void yield(void);
 #define max(a,b) ((a)>(b)?(a):(b))
 #define abs(x) ((x)>0?(x):-(x))
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
-#define round(x)     ((x)>=0?(long)((x)+0.5):(long)((x)-0.5))
+#define round(x)     ((x)>=0?(long long)((x)+0.5):(long long)((x)-0.5))
 #define radians(deg) ((deg)*DEG_TO_RAD)
 #define degrees(rad) ((rad)*RAD_TO_DEG)
 #define sq(x) ((x)*(x))
@@ -86,7 +84,7 @@ void yield(void);
 
 // avr-libc defines _NOP() since 1.6.2
 #ifndef _NOP
-#define _NOP() do { __asm__ volatile ("nop"); } while (0)
+# define _NOP() do { __asm__ volatile ("nop"); } while (0)
 #endif
 
 typedef unsigned int word;
@@ -99,7 +97,7 @@ typedef uint8_t byte;
 void init(void);
 void initVariant(void);
 
-int atexit(void (*func)()) __attribute__((weak));
+int atexit(void (*func)()) __weak;
 
 void pinMode(uint8_t, uint8_t);
 //void digitalWrite(uint8_t, uint8_t);
@@ -109,19 +107,19 @@ void analogReadResolution(int resolution);
 void analogReference(uint8_t mode);
 void analogWrite(uint8_t, int);
 void analogWriteResolution(int bits);
+uint8_t getAnalogWriteResolution(void);
 
-//STM32GENERIC only:
+void setPwmFrequency(uint32_t freqHz);/*add huaweiwx@sina.com 2018.8.2*/
+uint32_t getPwmFrequency(void); /*add huaweiwx@sina.com 2018.8.2*/
 void pwmWrite(uint8_t pin, int dutyCycle16Bits, int frequency, int durationMillis);
 
 //unsigned long millis(void);
 //unsigned long micros(void);
 //void delay(unsigned long);
 //void delayMicroseconds(uint32_t us);
-unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout);
-unsigned long pulseInLong(uint8_t pin, uint8_t state, unsigned long timeout);
 
-void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val);
-uint8_t shiftIn(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder);
+uint32_t shiftIn( uint32_t ulDataPin, uint32_t ulClockPin, uint32_t ulBitOrder ); //add by huaweiwx@sina.com
+void shiftOut( uint32_t ulDataPin, uint32_t ulClockPin, uint32_t ulBitOrder, uint32_t ulVal ); //add by huaweiwx@sina.com
 
 void attachInterrupt(uint8_t, void (*)(void), int mode);
 void detachInterrupt(uint8_t);
@@ -133,12 +131,11 @@ void loop(void);
 // This comes from the pins_*.c file for the active board configuration.
 
 #define analogInPinToBit(P) (P)
-
 #define digitalPinToPort(P) ( variant_pin_list[P].port )
-#define digitalPinToBitMask(P) ( variant_pin_list[P].pin_mask )
+#define digitalPinToBitMask(P) ( variant_pin_list[P].pinMask )
 #define portOutputRegister(P) ( &(P->ODR) )
 #define portInputRegister(P) ( &(P->IDR) )
-
+#define IS_ARDUINO_PIN(PIN)  ((PIN) < NUM_DIGITAL_PINS)
 // #define digitalPinToTimer(P) ( pgm_read_byte( digital_pin_to_timer_PGM + (P) ) )
 // #define analogInPinToBit(P) (P)
 // #define portInputRegister(P) ( (volatile uint8_t *)( pgm_read_word( port_to_input_PGM + (P))) )
@@ -154,12 +151,10 @@ void loop(void);
 #endif
 
 #ifdef __cplusplus
-//#include "WCharacter.h"
-//#include "WString.h"
-//#include "HardwareSerial.h"
-//#include "USBAPI.h"
+#include "WCharacter.h"
+
 #if defined(HAVE_HWSERIAL0) && defined(HAVE_CDCSERIAL)
-#error "Targets with both UART0 and CDC serial not supported"
+# error "Targets with both UART0 and CDC serial not supported"
 #endif
 
 uint16_t makeWord(uint16_t w);
@@ -167,8 +162,8 @@ uint16_t makeWord(byte h, byte l);
 
 #define word(...) makeWord(__VA_ARGS__)
 
-unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout = 1000000L);
-unsigned long pulseInLong(uint8_t pin, uint8_t state, unsigned long timeout = 1000000L);
+//unsigned long pulseIn(uint32_t pin, uint32_t state, unsigned long timeout = 1000000L);
+//unsigned long pulseInLong(uint32_t pin, uint32_t state, unsigned long timeout = 1000000L);
 
 extern "C" void tone(uint8_t _pin, unsigned int frequency, unsigned long duration = 0);
 void noTone(uint8_t _pin);
@@ -188,14 +183,16 @@ long map(long, long, long, long, long);
 
 #ifdef __cplusplus
 
-#include "SerialUART.h"
+#include "HardwareSerial.h"
 #include <SerialUSB.h>
 #include <STM32System.h>
 
+#include "wiring_pulse.h"  /*copy from Arduino_core_STM32 huaweiwx@sina.com 2017.11*/
+
 #if defined(MENU_SERIAL)
-#define Serial MENU_SERIAL
+# define Serial MENU_SERIAL
 #elif defined(MENU_SERIAL_AUTO)
-#define Serial MENU_SERIAL_AUTO
+# define Serial MENU_SERIAL_AUTO
 #endif
 
 #endif

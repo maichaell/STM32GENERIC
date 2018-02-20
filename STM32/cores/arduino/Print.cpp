@@ -26,7 +26,7 @@
 #include <math.h>
 #include "Arduino.h"
 #include <stdarg.h>
-
+#include <limits.h>
 #include "Print.h"
 
 // Public Methods //////////////////////////////////////////////////////////////
@@ -85,18 +85,18 @@ size_t Print::print(long n, int base)
     if (n < 0) {
       int t = print('-');
       n = -n;
-      return printNumber(n, 10) + t;
+      return printNumber((unsigned long long)n, 10) + t;
     }
-    return printNumber(n, 10);
+    return printNumber((unsigned long long)n, 10);
   } else {
-    return printNumber(n, base);
+    return printNumber((unsigned long long)n, base);
   }
 }
 
 size_t Print::print(unsigned long n, int base)
 {
   if (base == 0) return write(n);
-  else return printNumber(n, base);
+  else return printNumber((unsigned long long)n, base);
 }
 
 size_t Print::print(long long n, int base)
@@ -107,11 +107,11 @@ size_t Print::print(long long n, int base)
     if (n < 0) {
       int t = print('-');
       n = -n;
-      return printNumber(n, 10) + t;
+      return printNumber((unsigned long long)n, 10) + t;
     }
-    return printNumber(n, 10);
+    return printNumber((unsigned long long)n, 10);
   } else {
-    return printNumber(n, base);
+    return printNumber((unsigned long long)n, base);
   }
 }
 
@@ -121,8 +121,22 @@ size_t Print::print(unsigned long long n, int base)
   else return printNumber(n, base);
 }
 
+size_t Print::print(float n, int digits)
+{
+  if (n >  LONG_MAX) return print ("ovf");  // constant determined empirically
+  if (n <  LONG_MIN) return print ("ovf");  // constant determined empirically
+  if (isnan(n)) return print("nan");
+  if (isinf(n)) return print("inf");
+  
+  return printFloat((double)n, digits);
+}
+
 size_t Print::print(double n, int digits)
 {
+  if (n >  LONG_LONG_MAX) return print ("ovf");  // constant determined empirically
+  if (n <  LONG_LONG_MIN) return print ("ovf");  // constant determined empirically
+  if (isnan(n)) return print("nan");
+  if (isinf(n)) return print("inf");
   return printFloat(n, digits);
 }
 
@@ -213,6 +227,11 @@ size_t Print::println(unsigned long long num, int base)
   return n;
 }
 
+size_t Print::println(float num, int digits)
+{
+  return println((double)num, digits);
+}
+
 size_t Print::println(double num, int digits)
 {
   size_t n = print(num, digits);
@@ -242,7 +261,6 @@ size_t Print::printNumber(unsigned long long n, uint8_t base)
   do {
     char c = n % base;
     n /= base;
-
     *--str = c < 10 ? c + '0' : c + 'A' - 10;
   } while(n);
 
@@ -252,12 +270,7 @@ size_t Print::printNumber(unsigned long long n, uint8_t base)
 size_t Print::printFloat(double number, uint8_t digits) 
 { 
   size_t n = 0;
-  
-  if (isnan(number)) return print("nan");
-  if (isinf(number)) return print("inf");
-  if (number > 4294967040.0) return print ("ovf");  // constant determined empirically
-  if (number <-4294967040.0) return print ("ovf");  // constant determined empirically
-  
+   
   // Handle negative numbers
   if (number < 0.0)
   {
@@ -273,7 +286,7 @@ size_t Print::printFloat(double number, uint8_t digits)
   number += rounding;
 
   // Extract the integer part of the number and print it
-  unsigned long int_part = (unsigned long)number;
+  unsigned long long int_part = (unsigned long long)number;
   double remainder = number - (double)int_part;
   n += print(int_part);
 

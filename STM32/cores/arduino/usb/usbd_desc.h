@@ -79,6 +79,8 @@ extern USBD_DescriptorsTypeDef CDC_Desc;
 
 extern USBD_DescriptorsTypeDef MSC_Desc;
 
+extern USBD_DescriptorsTypeDef COMPOSITE_Desc;
+
 /**
   * @}
   */ 

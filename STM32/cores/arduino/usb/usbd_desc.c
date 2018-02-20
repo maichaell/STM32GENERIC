@@ -36,6 +36,12 @@
 #include "usbd_core.h"
 #include "usbd_desc.h"
 #include "usbd_conf.h"
+#if (USER_USBDDESC < 1)
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+//#pragma GCC diagnostic ignored "-Wwrite-strings"
+//#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+//#pragma GCC diagnostic ignored "-Wunused-variable"
+//#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
   * @{
@@ -201,9 +207,15 @@ __ALIGN_BEGIN uint8_t USBD_MSC_DeviceDesc[USB_LEN_DEV_DESC] __ALIGN_END =
     0x00,                       /* bcdUSB */
 #endif
     0x02,
+#ifdef MENU_USB_IAD
+    0xEF,                       /*bDeviceClass*/
+    0x02,                       /*bDeviceSubClass*/
+    0x01,                       /*bDeviceProtocol*/
+#else
     0x00,                       /*bDeviceClass*/
     0x00,                       /*bDeviceSubClass*/
     0x00,                       /*bDeviceProtocol*/
+#endif
     USB_MAX_EP0_SIZE,          /*bMaxPacketSize*/
     LOBYTE(USBD_VID),           /*idVendor*/
     HIBYTE(USBD_VID),           /*idVendor*/
@@ -404,4 +416,5 @@ USBD_DescriptorsTypeDef MSC_Desc =
   USBD_MSC_InterfaceStrDescriptor,
 };
 
+#endif //
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

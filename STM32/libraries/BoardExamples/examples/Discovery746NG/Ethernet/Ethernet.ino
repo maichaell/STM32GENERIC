@@ -18,7 +18,7 @@
 // For more examples, check the STM32Ethernet examples folder
 
 #include <LwIP.h>
-#include <STM32Ethernet.h>
+#include "STM32Ethernet.h"
 
 EthernetClient client;
 

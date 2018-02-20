@@ -1,8 +1,13 @@
 //TODO I2C slave mode for chips that use something else than I2C_IT_BUF
 
+#include <Arduino.h>
 #include "Wire.h"
 #include "stm32_gpio_af.h"
-#include <Arduino.h>
+
+#if defined(STM32F0)||defined(STM32L0)  /*F0/L0*/
+#define I2C1_EV_IRQn I2C1_IRQn
+#define I2C2_EV_IRQn I2C1_IRQn
+#endif
 
 #if defined(STM32F0)||defined(STM32L0)  /*F0/L0*/
 #define I2C1_EV_IRQn I2C1_IRQn
@@ -13,154 +18,180 @@
  */
 TwoWire *slaveTwoWire[4];
 
+
 TwoWire::TwoWire(I2C_TypeDef *instance) {
-    handle.Instance = instance;
+    pdev->handle.Instance = instance;
 }
 
-TwoWire::TwoWire(I2C_TypeDef *instance, uint8_t sda, uint8_t scl) {
-    handle.Instance = instance;
-    stm32SetSDA(sda);
-    stm32SetSCL(scl);
+TwoWire::TwoWire(uint8_t sda,uint8_t scl) { //add huaweiwx@sina.com 2017.8.2
+    this->setPins(sda,scl);
 }
 
-void TwoWire::begin(void) {
-    rxBufferIndex = 0;
-    rxBufferLength = 0;
+WIRE_StatusTypeDef TwoWire::setPins(uint8_t _sda,uint8_t _scl) {
+    pdev->sda = _sda;
+    pdev->scl = _scl;
+    pdev->handle.Instance = stm32GetI2CInstance(variant_pin_list[_sda].port,
+	                                      variant_pin_list[_sda].pinMask,
+										  variant_pin_list[_scl].port,
+										  variant_pin_list[_scl].pinMask);
+	if(pdev->handle.Instance) return WIRE_OK;
+	return WIRE_ERROR;
+}
 
-    txBufferIndex = 0;
-    txBufferLength = 0;
+void TwoWire::begin(void){
+    if(pdev->status !=WIRE_OK) return;  //
+    pdev->rxBufferIndex = 0;
+    pdev->rxBufferLength = 0;
 
-    isMaster = 1;
+    pdev->txBufferIndex = 0;
+    pdev->txBufferLength = 0;
 
-    stm32AfI2CInit(handle.Instance, sdaPort, sdaPin, sclPort, sclPin);
+    pdev->isMaster = 1;
 
-    #ifdef I2C1
-    if (handle.Instance == I2C1) {
+
+#if defined(I2C1) && (USE_I2C1)
+    if (pdev->handle.Instance == I2C1) {
         __HAL_RCC_I2C1_CLK_ENABLE();
     }
-    #endif
-    #ifdef I2C2
-    if (handle.Instance == I2C2) {
+#endif
+#ifdef defined(I2C2) && (USE_I2C2)
+    if (pdev->handle.Instance == I2C2) {
         __HAL_RCC_I2C2_CLK_ENABLE();
     }
-    #endif
-    #ifdef I2C3
-    if (handle.Instance == I2C3) {
+#endif
+#if defined(I2C3) && (USE_I2C3)
+    if (pdev->handle.Instance == I2C3) {
         __HAL_RCC_I2C3_CLK_ENABLE();
     }
-    #endif
-    #ifdef I2C4
-    if (handle.Instance == I2C4) {
+#endif
+#if defined(I2C4) && (USE_I2C4)
+    if (pdev->handle.Instance == I2C4) {
         __HAL_RCC_I2C4_CLK_ENABLE();
     }
-    #endif
+#endif
+	
+    stm32AfI2CInit(pdev->handle.Instance,
+				   variant_pin_list[pdev->sda].port,
+	               variant_pin_list[pdev->sda].pinMask,
+				   variant_pin_list[pdev->scl].port,
+				   variant_pin_list[pdev->scl].pinMask);
 
-    handle.Init.OwnAddress1 = 0;
-    handle.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-    handle.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-    handle.Init.OwnAddress2 = 0;
-    handle.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-    handle.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+    pdev->handle.Init.OwnAddress1 = 0;
+    pdev->handle.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+    pdev->handle.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+    pdev->handle.Init.OwnAddress2 = 0;
+    pdev->handle.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+    pdev->handle.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
 
     setClock(100000);
 }
 
 void TwoWire::begin(uint8_t address) {
-    isMaster = 0;
-    this->address = address << 1;
+    pdev->rxBufferIndex = 0;
+    pdev->rxBufferLength = 0;
 
-    stm32AfI2CInit(handle.Instance, sdaPort, sdaPin, sclPort, sclPin);
+    pdev->txBufferIndex = 0;
+    pdev->txBufferLength = 0;
 
-    #ifdef I2C1
-    if (handle.Instance == I2C1) {
+    pdev->isMaster = 0;
+	
+    pdev->address = address << 1;
+
+
+#if defined(I2C1) && (USE_I2C1)
+    if (pdev->handle.Instance == I2C1) {
         slaveTwoWire[0] = this;
         __HAL_RCC_I2C1_CLK_ENABLE();
-        HAL_NVIC_SetPriority(I2C1_EV_IRQn, 1, 0);
+        HAL_NVIC_SetPriority(I2C1_EV_IRQn, I2C_PRIORITY, 0);
         HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
     }
-    #endif
-    #ifdef I2C2
-    if (handle.Instance == I2C2) {
+#endif
+#if defined(I2C2) && (USE_I2C2)
+    if (pdev->handle.Instance == I2C2) {
         slaveTwoWire[1] = this;
         __HAL_RCC_I2C2_CLK_ENABLE();
-        HAL_NVIC_SetPriority(I2C2_EV_IRQn, 0, 0);
+        HAL_NVIC_SetPriority(I2C2_EV_IRQn, I2C_PRIORITY, 0);
         HAL_NVIC_EnableIRQ(I2C2_EV_IRQn);
     }
-    #endif
-    #ifdef I2C3
-    if (handle.Instance == I2C3) {
+#endif
+#if defined(I2C3) && (USE_I2C3)
+    if (pdev->handle.Instance == I2C3) {
         slaveTwoWire[2] = this;
         __HAL_RCC_I2C3_CLK_ENABLE();
-        HAL_NVIC_SetPriority(I2C3_EV_IRQn, 0, 0);
+        HAL_NVIC_SetPriority(I2C3_EV_IRQn, I2C_PRIORITY, 0);
         HAL_NVIC_EnableIRQ(I2C3_EV_IRQn);
     }
-    #endif
-    #ifdef I2C4
-    if (handle.Instance == I2C4) {
+#endif
+#if defined(I2C4) && (USE_I2C4)
+    if (pdev->handle.Instance == I2C4) {
         slaveTwoWire[3] = this;
         __HAL_RCC_I2C4_CLK_ENABLE();
-        HAL_NVIC_SetPriority(I2C4_EV_IRQn, 0, 0);
+        HAL_NVIC_SetPriority(I2C4_EV_IRQn, I2C_PRIORITY, 0);
         HAL_NVIC_EnableIRQ(I2C4_EV_IRQn);
     }
-    #endif
+#endif
 
-    handle.Init.OwnAddress1 = this -> address;
-    handle.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-    handle.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-    handle.Init.OwnAddress2 = 0;
-    handle.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-    handle.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+    stm32AfI2CInit (pdev->handle.Instance, 
+					variant_pin_list[pdev->sda].port,
+	                variant_pin_list[pdev->sda].pinMask,
+					variant_pin_list[pdev->scl].port,
+					variant_pin_list[pdev->scl].pinMask);
+									
+    pdev->handle.Init.OwnAddress1 = pdev->address;
+    pdev->handle.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+    pdev->handle.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+    pdev->handle.Init.OwnAddress2 = 0;
+    pdev->handle.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+    pdev->handle.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
 
     setClock(100000);
-    HAL_I2C_Slave_Receive_IT(&handle, &slaveBuffer, 1);
+    HAL_I2C_Slave_Receive_IT(&pdev->handle, &pdev->slaveBuffer, 1);
 
-    //TODO rewrite IRQ handling to not use HAL_I2C_EV_IRQHandler, so F1 can also work
-    #ifndef STM32F1
-    HAL_I2C_EnableListen_IT(&handle);
-    #endif
-
+    //TODO rewrite IRQ handling to not use HAL_I2C_EV_IRQHandler, so F1 can also work L0?
+#if !(defined(STM32F1)||defined(STM32L0))
+     HAL_I2C_EnableListen_IT(&pdev->handle);
+#endif
 }
 
 void TwoWire::begin(int address) {
-  begin((uint8_t)address);
+   begin((uint8_t)address);
 }
 
 void TwoWire::end(void) {
-  HAL_I2C_DeInit(&handle);
+  HAL_I2C_DeInit(&pdev->handle);
 }
-
 
 void TwoWire::setClock(uint32_t frequency) {
 
-    #if defined(STM32F1) || defined(STM32F2) || defined(STM32F4) || defined(STM32L1)
-        handle.Init.ClockSpeed = frequency;
-        handle.Init.DutyCycle = I2C_DUTYCYCLE_2;
-    #else
+#if defined(STM32F1) || defined(STM32F2) || defined(STM32F4) || defined(STM32L1)
+        pdev->handle.Init.ClockSpeed = frequency;
+        pdev->handle.Init.DutyCycle = I2C_DUTYCYCLE_2;
+#else
 
         // I2C1_100KHZ_TIMING needs to be #defined in variant.h for these boards
         // Open STM32CubeMX, select your chip, clock configuration according to systemclock_config.c
         // Enable all I2Cs, go to I2Cx configuration, parameter settings, copy the Timing value.
-        #ifdef I2C1
-            if (handle.Instance == I2C1) handle.Init.Timing = I2C1_100KHZ_TIMING;
-        #endif
-        #ifdef I2C2
-            if (handle.Instance == I2C2) handle.Init.Timing = I2C2_100KHZ_TIMING;
-        #endif
-        #ifdef I2C3
-            if (handle.Instance == I2C3) handle.Init.Timing = I2C3_100KHZ_TIMING;
-        #endif
-        #ifdef I2C4
-            if (handle.Instance == I2C4) handle.Init.Timing = I2C4_100KHZ_TIMING;
-        #endif
+#if defined(I2C1) && (USE_I2C1)
+            if (pdev->handle.Instance == I2C1) pdev->handle.Init.Timing = I2C1_100KHZ_TIMING;
+#endif
+#if defined(I2C2) && (USE_I2C2)
+            if (pdev->handle.Instance == I2C2) pdev->handle.Init.Timing = I2C2_100KHZ_TIMING;
+#endif
+#if defined(I2C3) && (USE_I2C3)
+            if (pdev->handle.Instance == I2C3) pdev->handle.Init.Timing = I2C3_100KHZ_TIMING;
+#endif
+#if defined(I2C4) && (USE_I2C4)
+            if (pdev->handle.Instance == I2C4) pdev->handle.Init.Timing = I2C4_100KHZ_TIMING;
+#endif
 
-    #endif
+#endif
 
-    HAL_I2C_Init(&handle);
+    HAL_I2C_Init(&pdev->handle);
 }
 
 
-uint8_t TwoWire::requestFrom(uint8_t address, uint8_t quantity, uint32_t iaddress, uint8_t isize, uint8_t sendStop) {
-  if (isMaster == true) {
+uint8_t TwoWire::requestFrom(uint8_t address, uint8_t quantity, uint32_t iaddress, uint8_t isize, uint8_t __attribute__ ((unused)) sendStop) {
+  if (pdev->isMaster == true) {
     if (isize > 0) {
     // send internal address; this mode allows sending a repeated start to access
     // some devices' internal registers. This function is executed by the hardware
@@ -176,7 +207,7 @@ uint8_t TwoWire::requestFrom(uint8_t address, uint8_t quantity, uint32_t iaddres
     // write internal register address - most significant byte first
     while (isize-- > 0)
       write((uint8_t)(iaddress >> (isize*8)));
-    endTransmission(false);
+      endTransmission(false);
     }
 
     // clamp to buffer length
@@ -188,13 +219,13 @@ uint8_t TwoWire::requestFrom(uint8_t address, uint8_t quantity, uint32_t iaddres
     //uint8_t read = twi_readFrom(address, rxBuffer, quantity, sendStop);
     uint8_t read = 0;
 
-    if (HAL_I2C_Master_Receive(&handle, address << 1, rxBuffer, quantity, 1000) == HAL_OK) {
+    if (HAL_I2C_Master_Receive(&pdev->handle, address << 1, pdev->rxBuffer, quantity, 1000) == HAL_OK) {
         read = quantity;
     }
 
     // set rx buffer iterator vars
-    rxBufferIndex = 0;
-    rxBufferLength = read;
+    pdev->rxBufferIndex = 0;
+    pdev->rxBufferLength = read;
 
     return read;
   }
@@ -219,11 +250,12 @@ uint8_t TwoWire::requestFrom(int address, int quantity, int sendStop) {
 }
 
 void TwoWire::beginTransmission(uint8_t address) {
+	pdev->transmitting = 1;
     // set address of targeted slave
-    txAddress = address << 1;
+    pdev->txAddress = address << 1;
     // reset tx buffer iterator vars
-    txBufferIndex = 0;
-    txBufferLength = 0;
+    pdev->txBufferIndex = 0;
+    pdev->txBufferLength = 0;
 }
 
 void TwoWire::beginTransmission(int address)
@@ -244,11 +276,12 @@ void TwoWire::beginTransmission(int address)
 //  no call to endTransmission(true) is made. Some I2C
 //  devices will behave oddly if they do not see a STOP.
 //
-uint8_t TwoWire::endTransmission(uint8_t sendStop) {
-    int8_t ret = 4;
+uint8_t TwoWire::endTransmission(uint8_t __attribute__ ((unused)) sendStop) {
+    int8_t ret = 0;
 
-    if (isMaster == true) {
-        HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(&handle, txAddress, txBuffer, txBufferLength, HAL_MAX_DELAY);
+    if (pdev->isMaster == true) {
+        HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(&pdev->handle, 
+		             pdev->txAddress, pdev->txBuffer, pdev->txBufferLength, HAL_MAX_DELAY);
         switch(status) {
             case HAL_OK :
                 ret = 0;
@@ -261,8 +294,9 @@ uint8_t TwoWire::endTransmission(uint8_t sendStop) {
                 break;
         }
 
-        txBufferIndex = 0;
-        txBufferLength = 0;
+        pdev->txBufferIndex = 0;
+        pdev->txBufferLength = 0;
+		pdev->transmitting = 0;
     }
 
     return ret;
@@ -279,32 +313,32 @@ uint8_t TwoWire::endTransmission(void) {
 // slave tx event callback
 // or after beginTransmission(address)
 size_t TwoWire::write(uint8_t data) {
-    if(isMaster) {
+    if(pdev->isMaster) {
         // in master transmitter mode
         // don't bother if buffer is full
-        if(txBufferLength >= BUFFER_LENGTH){
+        if(pdev->txBufferLength >= BUFFER_LENGTH){
               setWriteError();
               return 0;
         }
         // put byte in tx buffer
-        txBuffer[txBufferIndex] = data;
-        ++txBufferIndex;
+       pdev->txBuffer[pdev->txBufferIndex] = data;
+        ++pdev->txBufferIndex;
         // update amount in buffer
-        txBufferLength = txBufferIndex;
+        pdev->txBufferLength = pdev->txBufferIndex;
     }else{
         // in slave send mode
         // reply to master
 
-        if (HAL_I2C_Slave_Transmit_IT(&handle, &data, 1) != HAL_OK) {
-            if(txBufferLength >= BUFFER_LENGTH){
+        if (HAL_I2C_Slave_Transmit_IT(&pdev->handle, &data, 1) != HAL_OK) {
+            if(pdev->txBufferLength >= BUFFER_LENGTH){
                   setWriteError();
                   return 0;
             }
             // put byte in tx buffer
-            txBuffer[txBufferIndex] = data;
-            ++txBufferIndex;
+            pdev->txBuffer[pdev->txBufferIndex] = data;
+            ++pdev->txBufferIndex;
             // update amount in buffer
-            txBufferLength = txBufferIndex;
+            pdev->txBufferLength = pdev->txBufferIndex;
         }
 
     }
@@ -315,7 +349,7 @@ size_t TwoWire::write(uint8_t data) {
 // slave tx event callback
 // or after beginTransmission(address)
 size_t TwoWire::write(const uint8_t *data, size_t quantity) {
-    if(isMaster) {
+    if(pdev->isMaster) {
         // in master transmitter mode
         for(size_t i = 0; i < quantity; ++i){
           write(data[i]);
@@ -323,7 +357,7 @@ size_t TwoWire::write(const uint8_t *data, size_t quantity) {
     } else {
         // in slave send mode
         // reply to master
-        if (HAL_I2C_Slave_Transmit_IT(&handle, (uint8_t *)data, quantity) != HAL_OK) {
+        if (HAL_I2C_Slave_Transmit_IT(&pdev->handle, (uint8_t *)data, quantity) != HAL_OK) {
             for(size_t i = 0; i < quantity; ++i){
               write(data[i]);
             }
@@ -336,7 +370,7 @@ size_t TwoWire::write(const uint8_t *data, size_t quantity) {
 // slave rx event callback
 // or after requestFrom(address, numBytes)
 int TwoWire::available(void) {
-  return rxBufferLength - rxBufferIndex;
+  return pdev->rxBufferLength - pdev->rxBufferIndex;
 }
 
 // must be called in:
@@ -346,9 +380,9 @@ int TwoWire::read(void) {
   int value = -1;
 
   // get each successive byte on each call
-  if(rxBufferIndex < rxBufferLength){
-    value = rxBuffer[rxBufferIndex];
-    ++rxBufferIndex;
+  if(pdev->rxBufferIndex < pdev->rxBufferLength){
+    value = pdev->rxBuffer[pdev->rxBufferIndex];
+    ++pdev->rxBufferIndex;
   }
 
   return value;
@@ -360,87 +394,72 @@ int TwoWire::read(void) {
 int TwoWire::peek(void) {
   int value = -1;
 
-  if(rxBufferIndex < rxBufferLength){
-    value = rxBuffer[rxBufferIndex];
+  if(pdev->rxBufferIndex < pdev->rxBufferLength){
+    value = pdev->rxBuffer[pdev->rxBufferIndex];
   }
 
   return value;
 }
 
 void TwoWire::flush(void) {
-  rxBufferIndex = 0;
-  rxBufferLength = 0;
-  txBufferIndex = 0;
-  txBufferLength = 0;
-
-}
-
-void TwoWire::stm32SetInstance(I2C_TypeDef *instance) {
-    handle.Instance = instance;
-}
-
-void TwoWire::stm32SetSDA(uint8_t sda) {
-    sdaPort = variant_pin_list[sda].port;
-    sdaPin = variant_pin_list[sda].pin_mask;
-}
-
-void TwoWire::stm32SetSCL(uint8_t scl) {
-    sclPort = variant_pin_list[scl].port;
-    sclPin = variant_pin_list[scl].pin_mask;
+  pdev->rxBufferIndex = 0;
+  pdev->rxBufferLength = 0;
+  pdev->txBufferIndex = 0;
+  pdev->txBufferLength = 0;
 
 }
 
 TwoWire *interruptWire;
 
-#ifdef I2C1
+#if defined(I2C1) && (USE_I2C1)
 extern "C" void I2C1_EV_IRQHandler(void ) {
     interruptWire = slaveTwoWire[0];
-    HAL_I2C_EV_IRQHandler(&interruptWire->handle);
+    HAL_I2C_EV_IRQHandler(&interruptWire->pdev->handle);
 }
 #endif
-#ifdef I2C2
+#if defined(I2C2) && (USE_I2C2)
 extern "C" void I2C2_EV_IRQHandler(void ) {
     interruptWire = slaveTwoWire[1];
-    HAL_I2C_EV_IRQHandler(&interruptWire->handle);
+    HAL_I2C_EV_IRQHandler(&interruptWire->pdev->handle);
 }
 #endif
-#ifdef I2C3
+#if defined(I2C3) && (USE_I2C3)
 extern "C" void I2C3_EV_IRQHandler(void ) {
     interruptWire = slaveTwoWire[2];
-    HAL_I2C_EV_IRQHandler(&interruptWire->handle);
+    HAL_I2C_EV_IRQHandler(&interruptWire->pdev->handle);
 }
 #endif
-#ifdef I2C4
+#if defined(I2C4) && (USE_I2C4)
 extern "C" void I2C4_EV_IRQHandler(void ) {
     interruptWire = slaveTwoWire[3];
-    HAL_I2C_EV_IRQHandler(&interruptWire->handle);
+    HAL_I2C_EV_IRQHandler(&interruptWire->pdev->handle);
 }
 #endif
 
-extern "C" void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *handle) {
-    HAL_I2C_Slave_Receive_IT(&interruptWire->handle, &interruptWire->slaveBuffer, 1);
+extern "C" void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef __attribute__ ((unused)) *handle) {
+    HAL_I2C_Slave_Receive_IT(&interruptWire->pdev->handle, &interruptWire->pdev->slaveBuffer, 1);
 
     if (interruptWire != NULL) {
-        interruptWire->onReceiveService(&interruptWire->slaveBuffer, 1);
+        interruptWire->onReceiveService(&interruptWire->pdev->slaveBuffer, 1);
     }
 }
 
-extern "C" void HAL_I2C_AddrCallback(I2C_HandleTypeDef *handle, uint8_t TransferDirection, uint16_t AddrMatchCode) {
+extern "C" void HAL_I2C_AddrCallback(I2C_HandleTypeDef *handle, uint8_t TransferDirection, uint16_t __attribute__ ((unused)) AddrMatchCode) {
     if (interruptWire != NULL && TransferDirection == 0) {
         interruptWire->user_onRequest();
 
-        if (interruptWire->txBufferLength > 0) {
+        if (interruptWire->pdev->txBufferLength > 0) {
 
-            handle->pBuffPtr    = interruptWire->txBuffer;
-            handle->XferCount   = interruptWire->txBufferLength;
-            handle->XferSize    = interruptWire->txBufferLength;
+            handle->pBuffPtr    = interruptWire->pdev->txBuffer;
+            handle->XferCount   = interruptWire->pdev->txBufferLength;
+            handle->XferSize    = interruptWire->pdev->txBufferLength;
 
-            interruptWire->txBufferIndex = 0;
-            interruptWire->txBufferLength = 0;
+            interruptWire->pdev->txBufferIndex = 0;
+            interruptWire->pdev->txBufferLength = 0;
 
-            #ifdef I2C_IT_BUF
+#ifdef I2C_IT_BUF
             __HAL_I2C_ENABLE_IT(handle, I2C_IT_EVT | I2C_IT_BUF);
-            #endif
+#endif
         }
     }
 
@@ -456,17 +475,17 @@ void TwoWire::onReceiveService(uint8_t* inBytes, int numBytes) {
   // don't bother if rx buffer is in use by a master requestFrom() op
   // i know this drops data, but it allows for slight stupidity
   // meaning, they may not have read all the master requestFrom() data yet
-  if(rxBufferIndex < rxBufferLength){
+  if(pdev->rxBufferIndex < pdev->rxBufferLength){
     return;
   }
   // copy twi rx buffer into local read buffer
   // this enables new reads to happen in parallel
   for(uint8_t i = 0; i < numBytes; ++i){
-    rxBuffer[i] = inBytes[i];
+    pdev->rxBuffer[i] = inBytes[i];
   }
   // set rx iterator vars
-  rxBufferIndex = 0;
-  rxBufferLength = numBytes;
+  pdev->rxBufferIndex = 0;
+  pdev->rxBufferLength = numBytes;
   // alert user program
   user_onReceive(numBytes);
 }
@@ -480,8 +499,8 @@ void TwoWire::onRequestService() {
 
   // reset tx buffer iterator vars
   // !!! this will kill any pending pre-master sendTo() activity
-  txBufferIndex = 0;
-  txBufferLength = 0;
+  pdev->txBufferIndex = 0;
+  pdev->txBufferLength = 0;
   // alert user program
   user_onRequest();
 }
@@ -498,7 +517,7 @@ void TwoWire::onRequest( void (*function)(void) ) {
 
 
 #if defined(SDA) || defined(SCL)
-    TwoWire Wire = TwoWire(I2C1, SDA, SCL);
+    TwoWire Wire = TwoWire(SDA, SCL);
 #else
     TwoWire Wire = TwoWire(I2C1);
 #endif

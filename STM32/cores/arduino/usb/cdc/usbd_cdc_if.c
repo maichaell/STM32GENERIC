@@ -32,6 +32,13 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_cdc_if.h"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+//#pragma GCC diagnostic ignored "-Wwrite-strings"
+//#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+//#pragma GCC diagnostic ignored "-Wunused-variable"
+//#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+
+
 /* USER CODE BEGIN INCLUDE */
 
 //#include "variant.h"
@@ -127,7 +134,7 @@ static int8_t CDC_Receive_FS  (uint8_t* pbuf, uint32_t *Len);
   * @}
   */
 
-USBD_CDC_ItfTypeDef USBD_Interface_fops_FS =
+USBD_CDC_ItfTypeDef USBD_CDC_Interface_fops_FS =
 {
   CDC_Init_FS,
   CDC_DeInit_FS,

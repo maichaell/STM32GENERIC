@@ -1,13 +1,19 @@
-#ifndef _SDIO_H_INCLUDED
-#define _SDIO_H_INCLUDED
+#ifndef _SDIO_H_INCLUDED_
+#define _SDIO_H_INCLUDED_
 
 #include "stdint.h"
 #include "stm32_def.h"
-#define sdRdTimeout 200
-#define sdWrTimeout 5000
+
+#define sdWrTimeout  5000
 #define sdBsyTimeout 500
-#define sdErTimeout 250
-#define sd_timeout 250 // timeout in ms in the new HAL API
+#define sdErTimeout  250
+#ifdef STM32F1 
+#define sd_timeout   1000000000U
+#define sdRdTimeout  200
+#else
+#define sd_timeout   250 // timeout in ms in the new HAL API
+#define sdRdTimeout  400
+#endif
 #define SDCARD_STATUS_READY_BIT (1UL << 8)
 
 
@@ -43,11 +49,12 @@
 #endif
 
 // Fix typo for L4
-#ifndef HAL_SD_CardStateTypeDef
-#define HAL_SD_CardStateTypeDef HAL_SD_CardStateTypedef
-#define HAL_SD_CardStatusTypeDef HAL_SD_CardStatusTypedef
+#ifdef STM32L4
+# ifndef HAL_SD_CardStateTypeDef
+#  define HAL_SD_CardStateTypeDef   HAL_SD_CardStateTypedef
+#  define HAL_SD_CardStatusTypeDef  HAL_SD_CardStatusTypedef
+# endif
 #endif
-
 /*
  * Aux function. Doesn't exist in HAL. Allows to pre-erase blocks when the count of blocks to write is known.
  * ACMD23
@@ -107,7 +114,8 @@ class SDIOClass {
      */
     uint8_t errorCode();
     uint32_t errorData();
-    /** \return error line for last error. Tmp function for debug. */
+ 
+ /** \return error line for last error. Tmp function for debug. */
     uint32_t errorLine();
     void useDMA(bool useDMA);
 
@@ -120,8 +128,5 @@ class SDIOClass {
     HAL_SD_CardStatusTypeDef CardStatus;
     bool _useDMA = false;
 };
-
-static uint32_t m_errorLine = 0;
-static uint8_t m_errorCode = 0x64; //TODO cleanup, SdFat errors do not belong to SDIO driver (SD_CARD_ERROR_INIT_NOT_CALLED);
 
 #endif

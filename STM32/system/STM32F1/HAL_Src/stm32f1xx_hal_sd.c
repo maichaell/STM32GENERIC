@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    stm32f1xx_hal_sd.c
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    14-April-2017
+  * @version V1.1.1
+  * @date    12-May-2017
   * @brief   SD card HAL module driver.
   *          This file provides firmware functions to manage the following 
   *          functionalities of the Secure Digital (SD) peripheral:
@@ -372,6 +372,8 @@ HAL_StatusTypeDef HAL_SD_InitCard(SD_HandleTypeDef *hsd)
   /* Set Power State to ON */
   SDIO_PowerState_ON(hsd->Instance);
   
+ // danieleff: Without this, it hangs in SD_PowerON / SDMMC_CmdGoIdleState, timeouts waiting for SDIO_FLAG_CMDSENT
+  HAL_Delay(10U);
   /* Enable SDIO Clock */
   __HAL_SD_ENABLE(hsd);
   

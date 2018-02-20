@@ -9,11 +9,23 @@ rem: the two line below are needed to fix path issues with incorrect slashes bef
 set str=%4
 set str=%str:/=\%
 
+set alt=%2
 
-rem: ------------- use STLINK CLI
-stlink\ST-LINK_CLI.exe -c SWD -P %str% 0x8000000 -Rst -Run
+:FLASH
+stlink\ST-LINK_CLI.exe -c SWD -Rst -P %str% -Run  < stlink\stlink.quit
+goto EXIT
 
+
+:TEXANE
 rem: Using the open source texane-stlink instead of the proprietary STM stlink exe
-rem:texane-stlink\st-flash.exe write %str% 0x8000000
+rem: texane-stlink\st-flash.exe write %str% 0x8000000
+goto EXIT
 
-wait_for_serial.bat %1
+:JLINK
+rem: Using the open source texane-stlink instead of the proprietary STM stlink exe
+rem: texane-stlink\st-flash.exe write %str% 0x8000000
+goto EXIT
+
+
+:EXIT
+

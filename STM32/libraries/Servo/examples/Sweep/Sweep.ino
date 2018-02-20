@@ -1,7 +1,6 @@
 /* Sweep
  by BARRAGAN <http://barraganstudio.com>
  This example code is in the public domain.
-
  modified 8 Nov 2013
  by Scott Fitzgerald
  http://www.arduino.cc/en/Tutorial/Sweep
@@ -29,4 +28,3 @@ void loop() {
     delay(15);                       // waits 15ms for the servo to reach the position
   }
 }
-

@@ -1,7 +1,17 @@
 #ifndef VARIANT_H
 #define VARIANT_H
 
+//LED
+#define BOARD_NR_LED    1
 #define LED_BUILTIN PA5
+#define LED_BUILTIN_MASK 1
+#define STM32_LED_BUILTIN_ACTIVE_HIGH
+
+//On-board user button
+#define BOARD_NR_KEY	1
+#define BOTTON			PC13  // 2
+#define USER_BTN		BOTTON  // 2
+#define BOTTON_MASK		0x00
 
 #define MOSI PA7
 #define MISO PA6
@@ -10,6 +20,10 @@
 
 #define SDA PB9
 #define SCL PB8
+#define I2C1_100KHZ_TIMING 0x10909CEC
+#define I2C2_100KHZ_TIMING 0x10909CEC
+#define I2C3_100KHZ_TIMING 0x10909CEC
+
 
 #define A0 PA0
 #define A1 PA1

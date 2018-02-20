@@ -1,4 +1,5 @@
 #define STM32_CHIP_HAS_I2S
+#define STM32_CHIP_NOT_MCK	/*fix err in stm32_gpio_ar.c, add by huaweiwx@sina.com 2017.7.20*/
 
 const stm32_af_pin_list_type chip_af_i2s_ck [] = {
 //I2S2

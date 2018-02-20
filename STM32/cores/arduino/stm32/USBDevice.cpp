@@ -39,11 +39,20 @@ void USBDeviceClass::reenumerate() {
     /* Re-enumerate the USB */
       volatile unsigned int i;
 
-    #ifdef USB_DISC_PIN
+    #ifdef USB_DISC_PIN 
       pinMode(USB_DISC_PIN, OUTPUT);
-      digitalWrite(USB_DISC_PIN, HIGH);
-        for(i=0;i<512;i++);
-      digitalWrite(USB_DISC_PIN, LOW);
+	  #ifdef USB_DISC_LOW                 //add by huaweiwx@sina.com 2017.6.18
+       digitalWrite(USB_DISC_PIN, LOW);  //for HASEE_V3
+	  #else 	
+        digitalWrite(USB_DISC_PIN, HIGH); //for ArmFly/RedBull
+	  #endif
+        for(i=0;i<1512;i++);
+	  #ifdef USB_DISC_LOW
+        digitalWrite(USB_DISC_PIN, HIGH);
+	  #else 	
+        digitalWrite(USB_DISC_PIN, LOW);
+	  #endif
+	    for(i=0;i<512;i++);
     #else
       //pinMode(USBDP_PIN, OUTPUT);
       //digitalWrite(USBDP_PIN, LOW);
@@ -62,6 +71,22 @@ void USBDeviceClass::reenumerate() {
     #endif
 }
 
+#ifdef MENU_USB_IAD  /*huaweiwx@sina.com 2017.9.15 add*/
+
+bool USBDeviceClass::beginIDA() {
+    reenumerate();
+
+    USBD_Init(&hUsbDeviceFS, &MSC_Desc, DEVICE_FS);
+
+    USBD_RegisterClass(&hUsbDeviceFS, &USBD_COMPOSITE);
+
+ //   USBD_MSC_RegisterStorage(&hUsbDeviceFS, &USBD_MSC_Interface_fops_FS);
+
+    USBD_Start(&hUsbDeviceFS);
+
+    return true;
+}
+#elif defined(MENU_USB_SERIAL)
 bool USBDeviceClass::beginCDC() {
     reenumerate();
 
@@ -69,13 +94,13 @@ bool USBDeviceClass::beginCDC() {
 
     USBD_RegisterClass(&hUsbDeviceFS, &USBD_CDC);
 
-    USBD_CDC_RegisterInterface(&hUsbDeviceFS, &USBD_Interface_fops_FS);
+    USBD_CDC_RegisterInterface(&hUsbDeviceFS, &USBD_CDC_Interface_fops_FS);
 
     USBD_Start(&hUsbDeviceFS);
 
     return true;
 }
-
+#elif defined(MENU_USB_MASS_STORAGE)
 bool USBDeviceClass::beginMSC() {
     reenumerate();
 
@@ -83,31 +108,49 @@ bool USBDeviceClass::beginMSC() {
 
     USBD_RegisterClass(&hUsbDeviceFS, &USBD_MSC);
 
-    USBD_MSC_RegisterStorage(&hUsbDeviceFS, &USBD_DISK_fops);
+    USBD_MSC_RegisterStorage(&hUsbDeviceFS, &USBD_MSC_Interface_fops_FS);
 
     USBD_Start(&hUsbDeviceFS);
 
     return true;
 }
+#endif
+
+bool USBDeviceClass::end() {
+    return USBD_DeInit(&hUsbDeviceFS);
+}
 
 extern PCD_HandleTypeDef hpcd_USB_FS;
 extern PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
-//F1
+#if defined(STM32L0)||defined(STM32F0)  /*L0/F0 huaweiwx@sina.com 2017.9.24*/
+extern "C" void USB_IRQHandler(void) {
+  HAL_PCD_IRQHandler(&hpcd_USB_FS);
+}
+#elif defined(STM32L1) /*L1 huaweiwx@sina.com 2017.9.24*/
+extern "C" void USB_LP_IRQHandler(void)
+{
+  HAL_PCD_IRQHandler(&hpcd_USB_FS);
+}
+#elif defined(STM32F3) 
+extern "C" void USB_LP_CAN_RX0_IRQHandler(void) {
+  HAL_PCD_IRQHandler(&hpcd_USB_FS);
+}
+#else  //F1
 extern "C" void USB_LP_CAN1_RX0_IRQHandler(void) {
   HAL_PCD_IRQHandler(&hpcd_USB_FS);
 }
-//F4 F7
+#endif
+
+//F105/F107/F2/F4/F7/L4
 extern "C" void OTG_FS_IRQHandler(void) {
   HAL_PCD_IRQHandler(&hpcd_USB_OTG_FS);
-}
-//L0
-extern "C" void USB_IRQHandler(void) {
-  HAL_PCD_IRQHandler(&hpcd_USB_FS);
 }
 
 USBD_HandleTypeDef hUsbDeviceFS;
 
+#if (USE_USB)
 USBDeviceClass USBDeviceFS;
+#endif
 
 #endif

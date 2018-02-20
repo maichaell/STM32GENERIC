@@ -1,7 +1,7 @@
 #ifndef HARDWARETIMER_H_
 #define HARDWARETIMER_H_
 
-#include "Arduino.h"
+#include <Arduino.h>
 #include "stm32_gpio_af.h"
 
 typedef enum {
@@ -31,6 +31,9 @@ typedef enum {
 } TIMER_MODES;
 
 #define TIMER_DEFAULT_PIN 0xFF
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 
 class HardwareTimer {
 public:
@@ -91,6 +94,8 @@ private:
     void resumeChannel(int channel, int timChannel);
 
 };
+
+#pragma GCC diagnostic pop
 
 #ifdef TIM1
     extern HardwareTimer Timer1;

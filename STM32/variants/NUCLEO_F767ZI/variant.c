@@ -1,6 +1,6 @@
-#include "stm32_build_defines.h"
 #include "stm32_def.h"
 
+void SystemClock_Config(void) __weak;
 void SystemClock_Config(void) {
     RCC_OscInitTypeDef RCC_OscInitStruct;
     RCC_ClkInitTypeDef RCC_ClkInitStruct;
@@ -10,14 +10,28 @@ void SystemClock_Config(void) {
 
     __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
+#ifdef  USE_HSI
+	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+	RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+	RCC_OscInitStruct.HSICalibrationValue = 16;
+	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+	RCC_OscInitStruct.PLL.PLLM = 8;
+#else
     RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+# ifdef USE_HSEBYPASS 
     RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
+# else
+    RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+# endif	
     RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
     RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
     RCC_OscInitStruct.PLL.PLLM = 4;
+#endif
+
     RCC_OscInitStruct.PLL.PLLN = 216;
     RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-    RCC_OscInitStruct.PLL.PLLQ = 2;
+    RCC_OscInitStruct.PLL.PLLQ = 9;
     HAL_RCC_OscConfig(&RCC_OscInitStruct);
 
     HAL_PWREx_EnableOverDrive();
@@ -39,10 +53,8 @@ void SystemClock_Config(void) {
     HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
     /* SysTick_IRQn interrupt configuration */
-    HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
+#if FREERTOS
+	HAL_NVIC_SetPriority(PendSV_IRQn, SYSTICK_INT_PRIORITY, 0);
+#endif
+	HAL_NVIC_SetPriority(SysTick_IRQn, SYSTICK_INT_PRIORITY, 0);
 }
-
- 
-//extern void initVariant() {
-     //UART3 is connected to ST-Link V2.1 as Virtual Com port on non-default PA9/PB7 pins
-//}

@@ -2,6 +2,8 @@
 #define VARIANT_H
 
 #define LED_BUILTIN PA5
+#define LED_BUILTIN_MASK 1
+#define STM32_LED_BUILTIN_ACTIVE_HIGH
 
 #define MOSI PB5
 #define MISO PB4
@@ -10,6 +12,9 @@
 
 #define SDA PB9
 #define SCL PB8
+#define I2C1_100KHZ_TIMING 0x00000708
+#define I2C2_100KHZ_TIMING 0x00000708
+#define I2C3_100KHZ_TIMING 0x00000708
 
 
 #endif

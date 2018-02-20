@@ -19,7 +19,7 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 */
-
+ 
 #include "unistd.h"
 
 #include "STM32System.h"
@@ -28,9 +28,7 @@
 
 static const int print_fileno = 3;
 
-static Print *print = NULL;
-Stream *stdoutStream = NULL;
-Stream *stderrStream = NULL;
+static Print *print;
 
 int stm32SetPrintOutput(Print *p) {
     if (p == NULL) {
@@ -49,22 +47,22 @@ int stm32SetPrintOutput(Print *p) {
 }
 
 extern "C" int _write( int file, char *ptr, int len ) {
+    
+    if (file == STDOUT_FILENO)
+        return Serial.write(ptr, len);
 
-    if (file == STDOUT_FILENO) {
-
-        if (stdoutStream) stdoutStream->write(ptr, len);
-
-    } else if (file == STDERR_FILENO) {
-
-        if (stderrStream) stderrStream->write(ptr, len);
-        if (stderrStream) stderrStream->flush();
-
-    } else if (file == print_fileno) {
-
-        if (print != NULL)print->write(ptr, len);
-
-    } else {
-        // TODO show error
+	if (file == STDERR_FILENO) {
+		Serial.write(ptr, len);
+        Serial.flush();
+		return len;
+    }
+	
+	if (file == print_fileno) {
+        if (print != NULL) return print->write(ptr, len);
     }
 
+	// TODO show error
+
+    return 0;  //return no-void warning add by huaweiwx@sina.com 2017.7.21
 }
+

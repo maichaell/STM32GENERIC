@@ -7,7 +7,7 @@ const stm32_af_pin_list_type chip_af_i2s_mck [] = {
     { SPI3  , GPIOC, GPIO_PIN_7  , GPIO_AF6_SPI3  }, 
 }; 
 
-const stm32_af_pin_list_type chip_af_i2s_sck [] = {
+const stm32_af_pin_list_type chip_af_i2s_ck [] = {
 //I2S2
     { SPI2  , GPIOB, GPIO_PIN_10 , GPIO_AF5_SPI2  }, 
     { SPI2  , GPIOB, GPIO_PIN_13 , GPIO_AF5_SPI2  }, 

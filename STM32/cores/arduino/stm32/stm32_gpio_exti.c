@@ -18,6 +18,8 @@
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
+  
+  modify for L0/F0 by huaweiwx@sina.com 2017.12.18
 */
 
 #include "stm32_gpio.h"
@@ -47,14 +49,14 @@ stm32_exti_callback_func callbacks[16];
 void attachInterrupt(uint8_t pin, stm32_exti_callback_func callback, int mode) {
     const stm32_port_pin_type port_pin = variant_pin_list[pin];
 
-    uint8_t irq = __builtin_ffs(port_pin.pin_mask) - 1;
+    uint8_t irq = __builtin_ffs(port_pin.pinMask) - 1;
     callbacks[irq] = callback;
 
     stm32GpioClockEnable(port_pin.port);
 
     GPIO_InitTypeDef GPIO_InitStruct;
 
-    GPIO_InitStruct.Pin = port_pin.pin_mask;
+    GPIO_InitStruct.Pin = port_pin.pinMask;
     switch(mode) {
         case RISING:
             GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
@@ -71,15 +73,36 @@ void attachInterrupt(uint8_t pin, stm32_exti_callback_func callback, int mode) {
 
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(port_pin.port, &GPIO_InitStruct);
+	
+    HAL_NVIC_SetPriority(exti_irq[irq], EXTI_PRIORITY, 0); //define in stm32_def.h huaweiwx@sina.com 2017.12
 
-    HAL_NVIC_SetPriority(exti_irq[irq], 6, 0);
     HAL_NVIC_EnableIRQ(exti_irq[irq]);
 }
 
 void detachInterrupt(uint8_t pin) {
-    callbacks[__builtin_ffs(variant_pin_list[pin].pin_mask) - 1] = NULL;
+    callbacks[__builtin_ffs(variant_pin_list[pin].pinMask) - 1] = NULL;
 }
 
+#if defined(STM32F0) || defined(STM32L0) 
+void EXTI0_1_IRQHandler(void) {
+  for(uint32_t pin = GPIO_PIN_0; pin <= GPIO_PIN_1; pin=pin<<1) {
+    HAL_GPIO_EXTI_IRQHandler(pin);
+  }
+}
+
+void EXTI2_3_IRQHandler(void) {
+  for(uint32_t pin = GPIO_PIN_2; pin <= GPIO_PIN_3; pin=pin<<1) {
+    HAL_GPIO_EXTI_IRQHandler(pin);
+  }
+}
+
+void EXTI4_15_IRQHandler(void) {
+  for(uint32_t pin = GPIO_PIN_4; pin <= GPIO_PIN_15; pin=pin<<1) {
+    HAL_GPIO_EXTI_IRQHandler(pin);
+  }
+}
+
+#else 
 void EXTI0_IRQHandler(void) {
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
 }
@@ -111,6 +134,7 @@ void EXTI15_10_IRQHandler(void) {
     HAL_GPIO_EXTI_IRQHandler(pin);
   }
 }
+#endif
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     stm32_exti_callback_func callback = callbacks[__builtin_ffs(GPIO_Pin) - 1];

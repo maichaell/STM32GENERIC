@@ -501,3 +501,4 @@ PAGE_RESULT FlashVariables<DATA_SIZE>::pageTransfer(uint16_t variableIndex, uint
 }
 
 #endif
+

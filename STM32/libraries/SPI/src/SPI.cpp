@@ -1,10 +1,8 @@
 #include "SPI.h"
-
 #include "variant.h"
-
 #include "stm32_dma.h"
-
 #include "stm32_HAL/stm32XXxx_ll_spi.h"
+#include "util/toolschain.h"
 
 #if defined(MOSI) || defined(MISO) || defined(SCK)
 	SPIClass SPI(MOSI, MISO, SCK);
@@ -33,7 +31,7 @@ void SPIClass::begin() {
 #endif
 
 
-#ifdef SPI1
+#if defined(SPI1)&& (USE_SPI1)
         if (spiHandle.Instance== SPI1) {
             __HAL_RCC_SPI1_CLK_ENABLE();
 
@@ -41,8 +39,8 @@ void SPIClass::begin() {
             spiCallbackInstances[0] = spiHandle.Instance;
             spiClass[0] = this;
         }
-    #endif
-    #ifdef SPI2
+#endif
+#if defined(SPI2)&& (USE_SPI2)
         else if (spiHandle.Instance == SPI2) {
             __HAL_RCC_SPI2_CLK_ENABLE();
 
@@ -50,8 +48,8 @@ void SPIClass::begin() {
             spiCallbackInstances[1] = spiHandle.Instance;
             spiClass[1] = this;
         }
-    #endif
-    #ifdef SPI3
+#endif
+#if defined(SPI3)&& (USE_SPI3)
         else if (spiHandle.Instance == SPI3) {
             __HAL_RCC_SPI3_CLK_ENABLE();
 
@@ -59,8 +57,8 @@ void SPIClass::begin() {
             spiCallbackInstances[2] = spiHandle.Instance;
             spiClass[2] = this;
         }
-    #endif
-    #ifdef SPI4
+#endif
+#if defined(SPI4)&& (USE_SPI4)
         else if (spiHandle.Instance ==  SPI4) {
             __HAL_RCC_SPI4_CLK_ENABLE();
 
@@ -68,8 +66,8 @@ void SPIClass::begin() {
             spiCallbackInstances[3] = spiHandle.Instance;
             spiClass[3] = this;
         }
-    #endif
-    #ifdef SPI5
+#endif
+#if defined(SPI5)&& (USE_SPI5)
         else if (spiHandle.Instance ==  SPI5) {
             __HAL_RCC_SPI5_CLK_ENABLE();
 
@@ -77,8 +75,8 @@ void SPIClass::begin() {
             spiCallbackInstances[4] = spiHandle.Instance;
             spiClass[4] = this;
         }
-    #endif
-    #ifdef SPI6
+#endif
+#if defined(SPI6)&& (USE_SPI6)
         else if (spiHandle.Instance ==  SPI6) {
             __HAL_RCC_SPI6_CLK_ENABLE();
 
@@ -86,7 +84,7 @@ void SPIClass::begin() {
             spiCallbackInstances[5] = spiHandle.Instance;
             spiClass[5] = this;
         }
-    #endif
+#endif
 
 
     //////////////// DMA
@@ -115,8 +113,16 @@ void SPIClass::begin() {
 
 	__HAL_LINKDMA(&spiHandle, hdmatx, hdma_spi_tx);
 	__HAL_LINKDMA(&spiHandle, hdmarx, hdma_spi_rx);
-
-	stm32AfSPIInit(spiHandle.Instance, mosiPort, mosiPin, misoPort, misoPin, sckPort, sckPin);
+	
+    assert_param(IS_SPI_ALL_INSTANCE(spiHandle.Instance));
+    
+	stm32AfSPIInit(spiHandle.Instance, 
+			       variant_pin_list[mosiPin].port,
+				   variant_pin_list[mosiPin].pinMask,
+		           variant_pin_list[misoPin].port,
+				   variant_pin_list[misoPin].pinMask,
+		           variant_pin_list[sckPin].port,
+				   variant_pin_list[sckPin].pinMask);
 
 }
 
@@ -188,23 +194,34 @@ void SPIClass::setClockDivider(uint8_t clockDevider) {
 }
 
 void SPIClass::stm32SetMOSI(uint8_t mosi) {
-	mosiPort = variant_pin_list[mosi].port;
-	mosiPin = variant_pin_list[mosi].pin_mask;
+	mosiPin = mosi;
 }
-
 void SPIClass::stm32SetMISO(uint8_t miso) {
-	misoPort = variant_pin_list[miso].port;
-	misoPin = variant_pin_list[miso].pin_mask;
+	misoPin = miso;
 }
-
 void SPIClass::stm32SetSCK(uint8_t sck) {
-	sckPort = variant_pin_list[sck].port;
-	sckPin = variant_pin_list[sck].pin_mask;
+	sckPin = sck;
 }
-
 void SPIClass::stm32SetInstance(SPI_TypeDef *instance) {
 	spiHandle.Instance = instance;
 }
+
+HAL_StatusTypeDef SPIClass::setPins(uint8_t mosi,uint8_t miso,uint8_t sck){
+	mosiPin = mosi;
+	misoPin = miso;
+	sckPin  = sck;
+    spiHandle.Instance=stm32GetSPIInstance(
+	                    variant_pin_list[mosi].port,
+						variant_pin_list[mosi].pinMask,
+	                    variant_pin_list[miso].port,
+						variant_pin_list[miso].pinMask,
+	                    variant_pin_list[sck].port,
+						variant_pin_list[sck].pinMask);
+	assert_param(IS_SPI_ALL_INSTANCE(spiHandle.Instance));			
+	if(spiHandle.Instance) return HAL_OK;
+	return HAL_ERROR;
+};
+
 
 /** Returns true on success, false on failure
  * */

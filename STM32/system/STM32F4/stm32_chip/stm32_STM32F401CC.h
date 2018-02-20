@@ -3,7 +3,6 @@
 //MCU  xml: STM32F401C(B-C)Ux.xml
 //GPIO remap/alternate function xml: GPIO-STM32F401_gpio_v1_0_Modes.xml
 
-
 #include "stm32_GPIO_variant_1.h"
 
 #include "stm32_REMAP_variant_1.h"

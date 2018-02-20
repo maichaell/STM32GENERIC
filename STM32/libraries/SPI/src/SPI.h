@@ -81,30 +81,36 @@ typedef void (*spi_callback_type)();
 
 class SPIClass {
   public:
+    SPIClass(){};
+	
     SPIClass(SPI_TypeDef *instance) {
     	spiHandle.Instance = instance;
     };
+	
     SPIClass(SPI_TypeDef *instance, uint8_t mosi, uint8_t miso, uint8_t sck) {
 		spiHandle.Instance = instance;
-
-		stm32SetMOSI(mosi);
-		stm32SetMISO(miso);
-		stm32SetSCK(sck);
+	    mosiPin = mosi;
+	    misoPin = miso;
+	    sckPin  = sck;
 	};
-
+	
     SPIClass(uint8_t mosi, uint8_t miso, uint8_t sck) {
-        stm32SetMOSI(mosi);
-        stm32SetMISO(miso);
-        stm32SetSCK(sck);
+        setPins(mosi,miso,sck);
+    };
 
-        spiHandle.Instance = stm32GetSPIInstance(mosiPort, mosiPin, misoPort, misoPin, sckPort, sckPin);
-    }
-
+	HAL_StatusTypeDef setPins(uint8_t mosi,uint8_t miso,uint8_t sck);
+	
+    __deprecated("have a new func instead: setPins(mosipin,misopin,sckpin) add by huaweiwx")
     void stm32SetMOSI(uint8_t mosi);
+	
+    __deprecated("have a new func instead: setPins(mosipin,misopin,sckpin) add by huaweiwx")
     void stm32SetMISO(uint8_t miso);
+	
+    __deprecated("have a new func instead: setPins(mosipin,misopin,sckpin) add by huaweiwx")
     void stm32SetSCK(uint8_t sck);
+	
     void stm32SetInstance(SPI_TypeDef *instance);
-
+	
     void begin();
     void end();
 
@@ -209,13 +215,18 @@ class SPIClass {
     DMA_HandleTypeDef hdma_spi_rx = {};
     DMA_HandleTypeDef hdma_spi_tx = {};
 
-    GPIO_TypeDef *mosiPort = NULL;
-    uint32_t mosiPin = 0;
-    GPIO_TypeDef *misoPort = NULL;
-    uint32_t misoPin = 0;
-    GPIO_TypeDef *sckPort = NULL;
-    uint32_t sckPin = 0;
+//    GPIO_TypeDef *mosiPort = NULL;
+//    uint32_t mosiPin = 0;
+//    GPIO_TypeDef *misoPort = NULL;
+//    uint32_t misoPin = 0;
+//    GPIO_TypeDef *sckPort = NULL;
+//    uint32_t sckPin = 0;
+    uint8_t mosiPin = 0xff;
+    uint8_t misoPin = 0xff;
+    uint8_t sckPin = 0xff;
+
 };
+
 
 inline uint8_t SPIClass::transfer(uint8_t data) {
     while(__HAL_SPI_GET_FLAG(&spiHandle, SPI_FLAG_TXE) == RESET);
@@ -227,6 +238,11 @@ inline uint8_t SPIClass::transfer(uint8_t data) {
 
 	return *(volatile uint8_t*)&spiHandle.Instance->DR;
 }
+
+#if defined ( __GNUC__ )
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#endif
 
 inline uint16_t SPIClass::transfer16(uint16_t data) {
     LL_SPI_SetDataWidth(spiHandle.Instance, LL_SPI_DATAWIDTH_16BIT);
@@ -244,6 +260,9 @@ inline uint16_t SPIClass::transfer16(uint16_t data) {
 
     return ret;
 }
+#if defined ( __GNUC__ )
+#pragma GCC diagnostic pop
+#endif
 
 inline void SPIClass::transfer(uint8_t *buf, size_t count) {
 	HAL_SPI_TransmitReceive(&spiHandle, buf, buf, count, 1000);
